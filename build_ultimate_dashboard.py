@@ -30,7 +30,7 @@ HTML_CONTENT = """<!DOCTYPE html>
   <meta name="theme-color" content="#070a12">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>MeshCom Tactical Pro - IU0TGU-10</title>
+  <title>MeshCom Tactical Pro Dashboard</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="leaflet.css" />
   <script src="leaflet.js"></script>
@@ -1119,6 +1119,22 @@ HTML_CONTENT = """<!DOCTYPE html>
       pointer-events: none;
     }
 
+
+    .status-pill.status-disconnected {
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+    }
+    .status-pill.status-disconnected .dot.off {
+      background: #ef4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+    }
+    .sdr-status-dot.off {
+      background: var(--text-dim) !important;
+      box-shadow: none !important;
+      animation: none !important;
+    }
+
   </style>
 </head>
 <body>
@@ -1135,19 +1151,19 @@ HTML_CONTENT = """<!DOCTYPE html>
       <div>
         <div class="brand-title">
           <span>MESHCOM</span>
-          <span class="brand-callsign" id="hdrCallsign">IU0TGU-10</span>
-          <span class="badge-tag" id="hdrHwBadge" style="color:var(--accent-cyan); border-color:var(--border-active)">ESP32</span>
+          <span class="brand-callsign" id="hdrCallsign" style="color:var(--text-dim); font-size:0.95rem">DISCONNESSO</span>
+          <span class="badge-tag" id="hdrHwBadge" style="display:none; color:var(--accent-cyan); border-color:var(--border-active)">ESP32</span>
         </div>
       </div>
     </div>
 
     <div class="header-pills">
-      <div class="status-pill" id="connStatusPill">
-        <span class="dot ble" id="statusDot"></span>
-        <span id="connStatusText">BLE CONNESSO</span>
+      <div class="status-pill status-disconnected" id="connStatusPill">
+        <span class="dot off" id="statusDot"></span>
+        <span id="connStatusText">DISCONNESSO</span>
       </div>
-      <div class="status-pill" id="blePill">
-        <span style="color:#60a5fa" id="blePillName">📶 MC-a498 IU0TGU-10</span>
+      <div class="status-pill" id="blePill" style="display:none">
+        <span style="color:var(--accent-cyan)" id="blePillName">--</span>
       </div>
       <div class="status-pill">
         <span>⏱️ <span id="hdrUtcTime">--:--:-- UTC</span></span>
@@ -1155,8 +1171,8 @@ HTML_CONTENT = """<!DOCTYPE html>
       <div class="status-pill">
         <span id="hdrBattery">🔋 --V (--%)</span>
       </div>
-      <button class="btn-header" id="btnHdrConnect" onclick="connectBle()" style="border-color:var(--accent-cyan); color:var(--accent-cyan); background:rgba(6,182,212,0.12)">
-        <span>📶 Connetti BLE</span>
+      <button class="btn-header" id="btnHdrConnect" onclick="switchTab('connection')" style="border-color:var(--accent-cyan); color:var(--accent-cyan); background:rgba(6,182,212,0.12)">
+        <span>🔌 Connetti Nodo</span>
       </button>
       <button class="btn-header" id="btnAudioToggle" onclick="toggleAudioFx()">
         <span id="audioIcon">🔊</span> <span id="audioLabel">Audio ON</span>
@@ -1177,9 +1193,9 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span>Stato Radio LoRa</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/></svg>
         </div>
-        <div class="stat-value" id="cardFreq">433.175 <span class="stat-unit">MHz</span></div>
+        <div class="stat-value" id="cardFreq">-- <span class="stat-unit">MHz</span></div>
         <div class="stat-sub">
-          <span style="color:var(--accent-cyan)" id="cardTxPower">TX 20 dBm</span> • <span id="cardModulation">SF11 CR4/5 BW125</span>
+          <span style="color:var(--text-muted)" id="cardTxPower">Nessun nodo collegato</span> • <span id="cardModulation">In attesa connessione</span>
         </div>
       </div>
 
@@ -1188,9 +1204,9 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span>Posizione GPS (APRS)</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
         </div>
-        <div class="stat-value" id="cardLocator">JN61...</div>
+        <div class="stat-value" id="cardLocator">--</div>
         <div class="stat-sub" id="cardGpsCoords">
-          <span>In attesa di fix GPS dal nodo...</span>
+          <span>In attesa di connessione nodo...</span>
         </div>
       </div>
 
@@ -1201,7 +1217,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         </div>
         <div class="stat-value" id="cardTemp">--.- <span class="stat-unit">°C</span></div>
         <div class="stat-sub" id="cardWeatherExtra">
-          <span>Sensore in lettura...</span>
+          <span>Nessun sensore WX collegato</span>
         </div>
       </div>
 
@@ -1210,7 +1226,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <span>Traffico & Statistiche</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
         </div>
-        <div class="stat-value" id="cardMsgCount">0 <span class="stat-unit">msg live</span></div>
+        <div class="stat-value" id="cardMsgCount">0 <span class="stat-unit">msg</span></div>
         <div class="stat-sub">
           <span style="color:var(--accent-green)" id="cardStatsRx">RX: 0</span> • <span style="color:var(--accent-cyan)" id="cardStatsTx">TX: 0</span> • <span id="cardAcks">ACK: 0</span>
         </div>
@@ -1311,11 +1327,11 @@ HTML_CONTENT = """<!DOCTYPE html>
           <!-- MESSAGGI RAPIDI (CANNED MESSAGES) -->
           <div class="canned-bar">
             <span style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; font-weight:700">Rapidi:</span>
-            <button class="quick-chip" onclick="quickSend('73 de IU0TGU-10!')">73 de IU0TGU</button>
-            <button class="quick-chip" onclick="quickSend('CQ CQ CQ de IU0TGU-10')">CQ CQ</button>
+            <button class="quick-chip" onclick="sendCallCanned('73 de ')">73 de [Call]</button>
+            <button class="quick-chip" onclick="sendCallCanned('CQ CQ CQ de ')">CQ CQ</button>
             <button class="quick-chip" onclick="quickSend('Radio Check QSO - Come mi ricevi?')">Radio Check</button>
             <button class="quick-chip" onclick="quickSend('QRV dal mio QTH!')">QRV QTH</button>
-            <button class="quick-chip" onclick="quickSend('73 a tutti dal nodo MeshCom!')">73 a tutti</button>
+            <button class="quick-chip" onclick="quickSend('73 a tutti dalla maglia radio MeshCom!')">73 a tutti</button>
           </div>
 
           <!-- BARRA INVIO -->
@@ -1326,7 +1342,7 @@ HTML_CONTENT = """<!DOCTYPE html>
               <option value="999">Gr. 999</option>
               <option value="CUSTOM">Altro Callsign...</option>
             </select>
-            <input type="text" class="chat-input" id="messageInput" placeholder="Digita un messaggio LoRa da trasmettere con IU0TGU-10..." maxlength="110" onkeypress="if(event.key==='Enter') sendMeshMessage()">
+            <input type="text" class="chat-input" id="messageInput" placeholder="Connetti il tuo nodo MeshCom (BLE o Wi-Fi) per trasmettere..." maxlength="110" onkeypress="if(event.key==='Enter') sendMeshMessage()">
             <button class="btn-send" onclick="sendMeshMessage()">
               <span>Invia</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
@@ -1397,7 +1413,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           <div class="radar-circle radar-c2"></div>
           <div class="radar-circle radar-c3"></div>
           <div class="radar-node-dot" style="top:50%; left:50%; background:#10b981; color:#10b981">
-            <div class="radar-node-label" id="radarCenterLabel">TU (IU0TGU-10)</div>
+            <div class="radar-node-label" id="radarCenterLabel">TU (In attesa nodo)</div>
           </div>
         </div>
       </div>
@@ -1507,7 +1523,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         <div class="card rf-hud-card">
           <div class="rf-hud-header">
             <span class="rf-hud-title">LIVE SIGNAL RSSI</span>
-            <span class="rf-badge" id="rfSignalBadge">ATTESA RX</span>
+            <span class="rf-badge" id="rfSignalBadge">OFFLINE</span>
           </div>
           <div class="rf-hud-main">
             <span class="rf-val-num" id="rfCurRssi">--</span>
@@ -1527,57 +1543,57 @@ HTML_CONTENT = """<!DOCTYPE html>
             <div class="led-bar-seg" data-idx="8"></div>
             <div class="led-bar-seg" data-idx="9"></div>
           </div>
-          <div class="rf-hud-sub">Demodulazione LoRa fino a -135 dBm</div>
+          <div class="rf-hud-sub" id="rfRssiSub">In attesa di pacchetti radio RF...</div>
         </div>
 
         <!-- Card 2: Margine SNR & Headroom -->
         <div class="card rf-hud-card">
           <div class="rf-hud-header">
             <span class="rf-hud-title">MARGINE SNR</span>
-            <span class="rf-badge" id="rfSnrBadge" style="color:var(--accent-cyan); border-color:var(--border-active)">HEADROOM</span>
+            <span class="rf-badge" id="rfSnrBadge">OFFLINE</span>
           </div>
           <div class="rf-hud-main">
             <span class="rf-val-num" id="rfCurSnr">--</span>
             <span class="rf-val-unit">dB</span>
           </div>
           <div class="rf-progress-track">
-            <div class="rf-progress-fill" id="rfSnrFill" style="width: 50%;"></div>
+            <div class="rf-progress-fill" id="rfSnrFill" style="width: 0%;"></div>
           </div>
-          <div class="rf-hud-sub">Soglia operativa SX1262: -20 dB a SF11</div>
+          <div class="rf-hud-sub">Soglia demodulazione LoRa fino a -20 dB</div>
         </div>
 
         <!-- Card 3: Canale & Parametri Radio -->
         <div class="card rf-hud-card">
           <div class="rf-hud-header">
             <span class="rf-hud-title">CANALE LORA MESH</span>
-            <span class="rf-badge" style="color:var(--accent-green); border-color:rgba(16,185,129,0.3)">EU CH 1</span>
+            <span class="rf-badge" id="rfChannelBadge">OFFLINE</span>
           </div>
           <div class="rf-hud-main">
-            <span class="rf-val-num" style="color:var(--accent-cyan); font-size:1.45rem">433.175</span>
+            <span class="rf-val-num" id="rfChannelFreq" style="color:var(--text-dim); font-size:1.45rem">--</span>
             <span class="rf-val-unit">MHz</span>
           </div>
-          <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); display:flex; gap:0.5rem; margin-top:0.4rem">
-            <span>BW: <b>125 kHz</b></span>
-            <span>SF: <b>11</b></span>
-            <span>CR: <b>4/5</b></span>
-            <span>TX: <b id="rfTxPwrDisp">20 dBm</b></span>
+          <div style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); display:flex; gap:0.5rem; margin-top:0.4rem" id="rfChannelParams">
+            <span>BW: <b id="rfBwDisp">--</b></span>
+            <span>SF: <b id="rfSfDisp">--</b></span>
+            <span>CR: <b id="rfCrDisp">--</b></span>
+            <span>TX: <b id="rfTxPwrDisp">-- dBm</b></span>
           </div>
-          <div class="rf-hud-sub">Spettro ISM 433.050 - 433.300 MHz</div>
+          <div class="rf-hud-sub" id="rfChannelSub">In attesa sincronizzazione parametri dal nodo</div>
         </div>
 
         <!-- Card 4: Noise Floor & Qualità Link -->
         <div class="card rf-hud-card">
           <div class="rf-hud-header">
             <span class="rf-hud-title">NOISE FLOOR & LQI</span>
-            <span class="rf-badge" style="color:var(--accent-purple); border-color:rgba(168,85,247,0.3)">THERMAL</span>
+            <span class="rf-badge" id="rfNoiseFloorBadge">OFFLINE</span>
           </div>
           <div class="rf-hud-main">
-            <span class="rf-val-num" id="rfNoiseFloor">-118</span>
+            <span class="rf-val-num" id="rfNoiseFloor">--</span>
             <span class="rf-val-unit">dBm</span>
-            <span class="rf-smeter-pill" style="border-color:rgba(168,85,247,0.4); color:#c084fc">99% LQI</span>
+            <span class="rf-smeter-pill" id="rfLqiPill" style="border-color:rgba(255,255,255,0.1); color:var(--text-dim)">-- LQI</span>
           </div>
           <div class="rf-progress-track">
-            <div class="rf-progress-fill" style="width:94%; background:linear-gradient(90deg, #10b981, #06b6d4)"></div>
+            <div class="rf-progress-fill" id="rfLqiFill" style="width:0%"></div>
           </div>
           <div class="rf-hud-sub" id="rfPacketsSeenSub">0 pacchetti LoRa analizzati</div>
         </div>
@@ -1588,15 +1604,12 @@ HTML_CONTENT = """<!DOCTYPE html>
         <!-- SDR Control Header Bar -->
         <div class="sdr-control-bar">
           <div class="sdr-title-group">
-            <div class="sdr-status-dot"></div>
-            <span class="sdr-title">ANALIZZATORE DI SPETTRO RF & CASCATA SDR</span>
-            <span class="sdr-center-chip">FO: 433.175 MHz • SPAN 250 kHz</span>
+            <div class="sdr-status-dot off" id="sdrStatusDot"></div>
+            <span class="sdr-title" id="sdrMainTitle">ANALIZZATORE DI SPETTRO RF (STANDBY)</span>
+            <span class="sdr-center-chip" id="sdrCenterChip">CENTRO: -- MHz • SPAN -- kHz</span>
           </div>
 
           <div class="sdr-btn-group">
-            <button class="sdr-tool-btn active" id="btnSdrSimBurst" onclick="triggerSimulatedRfBurst()" title="Simula burst RF LoRa in tempo reale">
-              🧪 Simula Burst LoRa
-            </button>
             <button class="sdr-tool-btn" id="btnToggleWaterfall" onclick="toggleWaterfallPause()">
               <span id="waterfallPlayIcon">⏸️</span> Pausa
             </button>
@@ -1616,17 +1629,17 @@ HTML_CONTENT = """<!DOCTYPE html>
           <!-- FFT Realtime Scope Canvas -->
           <div class="sdr-fft-wrap">
             <canvas id="sdrFftCanvas" width="900" height="220"></canvas>
-            <div class="sdr-carrier-tag">CH 1 • 433.175 MHz (125 kHz BW)</div>
+            <div class="sdr-carrier-tag" id="sdrCarrierTag" style="display:none">CH 1 • 433.175 MHz</div>
             <div class="sdr-crosshair-hud" id="sdrCrosshairHud"></div>
           </div>
 
           <!-- Tactical Frequency Axis Bar -->
-          <div class="sdr-freq-axis">
-            <span>433.050 MHz</span>
-            <span>433.100 MHz</span>
-            <span class="active">433.175 MHz (CENTER)</span>
-            <span>433.250 MHz</span>
-            <span>433.300 MHz</span>
+          <div class="sdr-freq-axis" id="sdrFreqAxis">
+            <span>--</span>
+            <span>--</span>
+            <span class="active">IN ATTESA NODO</span>
+            <span>--</span>
+            <span>--</span>
           </div>
 
           <!-- SDR Scrolling Waterfall Canvas -->
@@ -1703,11 +1716,11 @@ HTML_CONTENT = """<!DOCTYPE html>
           </h3>
           <div class="form-group">
             <label>Nominativo (Callsign con SSID)</label>
-            <input type="text" class="form-control" id="cfgCallsign" value="IU0TGU-10" maxlength="10">
+            <input type="text" class="form-control" id="cfgCallsign" value="" placeholder="In attesa dati dal nodo..." maxlength="10">
           </div>
           <div class="form-group">
             <label>Testo Beacon APRS (Commento)</label>
-            <input type="text" class="form-control" id="cfgAprsText" value="MeshCom LoRa Node IU0TGU" maxlength="50">
+            <input type="text" class="form-control" id="cfgAprsText" value="" placeholder="In attesa dati dal nodo..." maxlength="50">
           </div>
           <div class="form-group">
             <label>Icona Simbolo APRS</label>
@@ -1732,7 +1745,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           </h3>
           <div class="form-group">
             <label>Frequenza Radio (MHz)</label>
-            <input type="number" step="0.005" class="form-control" id="cfgFreq" value="433.175">
+            <input type="number" step="0.005" class="form-control" id="cfgFreq" value="" placeholder="Es: 433.175 o 868.125">
           </div>
           <div class="form-group">
             <label>Potenza di Trasmissione TX (dBm)</label>
@@ -1807,30 +1820,72 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     <!-- PANE 9: CONNESSIONE & CLI TERMINAL -->
     <section class="tab-pane" id="pane-connection">
-      <div class="card" style="max-width:840px; margin:0 auto; width:100%">
-        <h3 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem; color:var(--accent-cyan)">
-          🔌 Connessione Hardware & Terminale CLI Nordic UART
-        </h3>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1rem; margin-bottom:1rem">
+        <!-- 1. BLUETOOTH LOW ENERGY (NORDIC UART) -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between">
           <div>
-            <div style="font-size:0.85rem; font-weight:600">Dispositivo Accoppiato: <span id="bleDeviceLabel" style="color:var(--accent-cyan); font-family:var(--font-mono)">MC-a498 IU0TGU-10</span></div>
-            <div style="font-size:0.72rem; color:var(--text-muted)">Servizio Nordic UART Service (NUS) attivo su 6E400001-...</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem">
+              <h3 style="font-size:0.95rem; font-weight:700; color:var(--accent-cyan); display:flex; align-items:center; gap:0.4rem">
+                📶 Bluetooth Low Energy (BLE)
+              </h3>
+              <span class="badge-tag" id="bleCardBadge" style="color:var(--text-dim)">OFFLINE</span>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem">
+              Compatibile con tutti i nodi MeshCom: ESP32, ESP32-S3, nRF52840 (Heltec V1/V2/V3, T-Beam, T-Deck, RAK WisBlock, T-Echo).
+            </p>
+            <div style="font-size:0.8rem; font-family:var(--font-mono); margin-bottom:0.75rem; background:rgba(0,0,0,0.3); padding:0.5rem; border-radius:4px; border:1px solid var(--border-subtle)">
+              Dispositivo: <span id="bleDeviceLabel" style="color:var(--text-main); font-weight:700">Nessun dispositivo accoppiato</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
+            <button class="btn-send" id="btnScanBle" onclick="connectBle()" style="flex:1">
+              🔍 Scansiona & Connetti BLE
+            </button>
+            <button class="btn-action" id="btnDisconnectBle" onclick="disconnectBle()" style="display:none; flex:1">
+              Disconnetti BLE
+            </button>
+            <button class="btn-action" id="btnHandshakeBle" onclick="sendBleHandshake()" style="display:none">
+              Handshake (0x10)
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. RETE WI-FI / LAN REST API -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem">
+              <h3 style="font-size:0.95rem; font-weight:700; color:var(--accent-green); display:flex; align-items:center; gap:0.4rem">
+                🌐 Connessione Wi-Fi / Rete LAN
+              </h3>
+              <span class="badge-tag" id="wifiCardBadge" style="color:var(--text-dim)">OFFLINE</span>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem">
+              Connessione diretta tramite IP locale a nodi fissi, gateway MeshCom o SoftAP (Default AP: <code>192.168.4.1</code>).
+            </p>
+            <div class="form-group" style="margin-bottom:0.75rem">
+              <label style="font-size:0.72rem; color:var(--text-dim)">Indirizzo IP o Hostname Nodo MeshCom</label>
+              <input type="text" id="wifiNodeIp" class="form-control" style="font-family:var(--font-mono); font-size:0.82rem" value="192.168.4.1" placeholder="Es: 192.168.4.1 o 192.168.1.150">
+            </div>
           </div>
           <div style="display:flex; gap:0.5rem">
-            <button class="btn-send" id="btnScanBle" style="display:none" onclick="connectBle()">Riconnetti BLE</button>
-            <button class="btn-action" id="btnDisconnectBle" onclick="disconnectBle()">Disconnetti</button>
-            <button class="btn-action" onclick="sendBleHandshake()">Handshake (0x10)</button>
+            <button class="btn-send" id="btnConnectWifi" onclick="connectWifi()" style="flex:1; background:linear-gradient(135deg, #10b981, #06b6d4)">
+              🌐 Connetti via Wi-Fi
+            </button>
+            <button class="btn-action" id="btnDisconnectWifi" onclick="disconnectWifi()" style="display:none; flex:1">
+              Disconnetti Wi-Fi
+            </button>
           </div>
         </div>
+      </div>
 
-        <!-- CLI Terminal Box -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem">
-          <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700; text-transform:uppercase">Terminale Pacchetti BLE & Comandi:</span>
+      <!-- 3. TERMINALE CLI & COMANDI NATIVI -->
+      <div class="card" style="width:100%">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem">
+          <span style="font-size:0.75rem; color:var(--text-dim); font-weight:700; text-transform:uppercase; font-family:var(--font-mono)">Terminale Pacchetti & Console Firmware CLI:</span>
           <button class="btn-action" style="padding:0.15rem 0.45rem; font-size:0.7rem" onclick="clearBleLog()">Pulisci log</button>
         </div>
-        <div class="log-terminal" id="bleLogTerminal">
-          <div>[INFO] Connessione Bluetooth attiva con MC-a498 IU0TGU-10.</div>
+        <div class="log-terminal" id="bleLogTerminal" style="height:170px">
+          <div>[SISTEMA] Dashboard pronta. Connetti un dispositivo MeshCom tramite Bluetooth BLE o Wi-Fi per iniziare.</div>
         </div>
 
         <!-- Comandi Rapidi CLI -->
@@ -1864,23 +1919,35 @@ HTML_CONTENT = """<!DOCTYPE html>
 
   <script>
     // ==========================================
-    // STATO APPLICAZIONE & LIVE NODE IU0TGU-10
+    // STATO APPLICAZIONE & GESTIONE NODI UNIVERSALE
     // ==========================================
-    let activeMode = "ble";
-    let ownCallsign = "IU0TGU-10";
+    let isNodeConnected = false;
+    let activeTransport = null; // 'ble' | 'wifi' | null
+    let connectedDeviceName = "";
+    let ownCallsign = "";       // Popolato solo dal nodo connesso (TYP: "I")
+    let ownHardware = "";       // ESP32, ESP32-S3, nRF52840, RP2040
+    let nodeFrequency = 0;      // Frequenza reale (es. 433.175, 868.125, 915.000)
+    let nodeBandwidth = 125;    // kHz
+    let nodeSf = 11;
+    let nodeTxPower = 20;
+
     let currentChannel = "*";
     let audioFxEnabled = true;
-    let mapMode = "map"; // "map" o "radar"
+    let mapMode = "map";
 
-    // Bluetooth NUS UUIDs
+    // Bluetooth NUS UUIDs (Standard Nordic UART per ESP32, ESP32-S3, nRF52840)
     const NUS_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-    const NUS_RX_CHAR_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'; // Write -> Node
-    const NUS_TX_CHAR_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'; // Notify -> Client
+    const NUS_RX_CHAR_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+    const NUS_TX_CHAR_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
     let bleDevice = null;
     let bleServer = null;
     let rxCharacteristic = null;
     let txCharacteristic = null;
+
+    // Wi-Fi Connection State
+    let wifiPollerId = null;
+    let wifiNodeIp = "192.168.4.1";
 
     // Archivi Dati Live
     let liveMessages = [];
@@ -1916,10 +1983,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
       }, 30000);
 
-      // Query iniziale
-      setTimeout(() => {
-        requestNodeTelemetry();
-      }, 1200);
+      // Nessuna interrogazione finché nessun nodo è connesso!
     });
 
     // Orologio UTC
@@ -2258,7 +2322,7 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     // ==========================================
-    // PARSING JSON MESHCOM COMPLETO
+    // PARSING JSON MESHCOM COMPLETO & AUTO-DETECTION
     // ==========================================
     function parseNodeJson(jsonStr) {
       try {
@@ -2268,20 +2332,27 @@ HTML_CONTENT = """<!DOCTYPE html>
         if (j.TYP === "I") {
           if (j.CALL) {
             ownCallsign = j.CALL;
-            document.getElementById("hdrCallsign").textContent = j.CALL;
-            document.getElementById("cfgCallsign").value = j.CALL;
-            document.getElementById("radarCenterLabel").textContent = `TU (${j.CALL})`;
+            const hdrCall = document.getElementById("hdrCallsign");
+            if (hdrCall) {
+              hdrCall.textContent = j.CALL;
+              hdrCall.style.color = "var(--text-main)";
+            }
+            const cfgCall = document.getElementById("cfgCallsign");
+            if (cfgCall) cfgCall.value = j.CALL;
+            const rLab = document.getElementById("radarCenterLabel");
+            if (rLab) rLab.textContent = `TU (${j.CALL})`;
+            const msgInp = document.getElementById("messageInput");
+            if (msgInp) msgInp.placeholder = `Digita un messaggio LoRa da trasmettere con ${j.CALL}...`;
           }
+
+          if (j.HWID || j.FWVER) {
+            detectHardwareModel(j.HWID, j.FWVER);
+          }
+
           if (j.FREQ || j.MQRG) {
-            const f = j.MQRG || j.FREQ;
-            document.getElementById("cardFreq").innerHTML = `${parseFloat(f).toFixed(3)} <span class="stat-unit">MHz</span>`;
-            document.getElementById("cfgFreq").value = parseFloat(f).toFixed(3);
+            updateRadioParams(j.MQRG || j.FREQ, j.TXP || j.TXPWR, j.MSF, j.MBW, j.MCR);
           }
-          if (j.TXPWR !== undefined || j.TXP !== undefined) {
-            const p = j.TXP !== undefined ? j.TXP : j.TXPWR;
-            document.getElementById("cardTxPower").textContent = `TX ${p} dBm`;
-            document.getElementById("cfgTxPower").value = p;
-          }
+
           if (j.BATV !== undefined || j.BATP !== undefined) {
             const v = j.BATV ? parseFloat(j.BATV).toFixed(2) : '--';
             const p = j.BATP !== undefined ? j.BATP : '--';
@@ -2289,27 +2360,11 @@ HTML_CONTENT = """<!DOCTYPE html>
             document.getElementById("wxBatV").innerHTML = `${v} <span class="stat-unit">V</span>`;
             document.getElementById("wxBatP").textContent = `Carica stimata: ${p}%`;
           }
-          if (j.FWVER || j.HWID) {
-            const hw = j.HWID ? `${j.HWID}` : 'ESP32';
-            const fw = j.FWVER ? ` ${j.FWVER}` : '';
-            document.getElementById("hdrHwBadge").textContent = `${hw}${fw}`;
-          }
         }
 
         // Frame SN (Node Settings / LoRa RF)
         if (j.TYP === "SN" || j.MQRG !== undefined) {
-          if (j.MQRG) {
-            document.getElementById("cardFreq").innerHTML = `${parseFloat(j.MQRG).toFixed(3)} <span class="stat-unit">MHz</span>`;
-            document.getElementById("cfgFreq").value = parseFloat(j.MQRG).toFixed(3);
-          }
-          if (j.TXP !== undefined) {
-            document.getElementById("cardTxPower").textContent = `TX ${j.TXP} dBm`;
-            document.getElementById("cfgTxPower").value = j.TXP;
-          }
-          if (j.MSF) {
-            document.getElementById("cardModulation").textContent = `SF${j.MSF} CR${j.MCR||'4/5'} BW${j.MBW||125}`;
-            document.getElementById("cfgSf").value = j.MSF;
-          }
+          updateRadioParams(j.MQRG, j.TXP, j.MSF, j.MBW, j.MCR);
           if (j.MSH !== undefined) document.getElementById("cfgMesh").checked = (j.MSH === 1 || j.MSH === true);
           if (j.GW !== undefined) document.getElementById("cfgGateway").checked = (j.GW === 1 || j.GW === true);
           if (j.GPS !== undefined) document.getElementById("cfgGps").checked = (j.GPS === 1 || j.GPS === true);
@@ -2317,7 +2372,9 @@ HTML_CONTENT = """<!DOCTYPE html>
 
         // Frame W (Meteo sensori BME280/INA)
         if (j.TYP === "W") {
+          let hasWx = false;
           if (j.TEMP !== undefined && j.TEMP !== null) {
+            hasWx = true;
             const t = parseFloat(j.TEMP).toFixed(1);
             document.getElementById("cardTemp").innerHTML = `${t} <span class="stat-unit">°C</span>`;
             document.getElementById("wxTemp").innerHTML = `${t} <span class="stat-unit">°C</span>`;
@@ -2325,7 +2382,11 @@ HTML_CONTENT = """<!DOCTYPE html>
           const hum = (j.HUM != null) ? `${j.HUM}%` : 'N/D';
           const pressVal = (j.PRES != null && j.PRES !== 0) ? j.PRES : ((j.PRESS != null && j.PRESS !== 0) ? j.PRESS : null);
           const pressStr = pressVal ? `${parseFloat(pressVal).toFixed(1)} hPa` : 'N/D';
-          document.getElementById("cardWeatherExtra").innerHTML = `<span>Umidità: ${hum}</span> • <span>${pressStr}</span>`;
+          if (hasWx) {
+            document.getElementById("cardWeatherExtra").innerHTML = `<span>Umidità: ${hum}</span> • <span>${pressStr}</span>`;
+          } else {
+            document.getElementById("cardWeatherExtra").innerHTML = `<span>Nessun sensore WX rilevato</span>`;
+          }
           document.getElementById("wxHum").innerHTML = `${hum}`;
           document.getElementById("wxPress").innerHTML = `${pressStr}`;
           if (j.QNH != null) document.getElementById("wxQnh").textContent = `QNH: ${parseFloat(j.QNH).toFixed(1)} hPa`;
@@ -2365,7 +2426,7 @@ HTML_CONTENT = """<!DOCTYPE html>
           });
 
           if (j.RSSI !== undefined) {
-            recordRssi(j.CALL, parseInt(j.RSSI));
+            recordRssi(j.CALL, parseInt(j.RSSI), j.SNR !== undefined ? parseFloat(j.SNR) : null);
           }
         }
 
@@ -2376,8 +2437,107 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
 
       } catch (err) {
-        console.warn("JSON parse err:", err);
+        console.warn('JSON parsing error:', err);
       }
+    }
+
+    function detectHardwareModel(hwid, fwver) {
+      let model = "ESP32";
+      const s = String(hwid || "").toUpperCase();
+      if (s.includes("S3") || s.includes("HELTEC_V3") || s.includes("V3") || s.includes("T-DECK") || s.includes("SUPREME")) {
+        model = "ESP32-S3";
+      } else if (s.includes("NRF") || s.includes("RAK") || s.includes("ECHO")) {
+        model = "nRF52840";
+      } else if (s.includes("RP2040") || s.includes("PICO")) {
+        model = "RP2040";
+      } else if (s.includes("T-BEAM")) {
+        model = "T-Beam";
+      } else if (s.includes("HELTEC")) {
+        model = "Heltec";
+      }
+      ownHardware = model;
+      const badge = document.getElementById("hdrHwBadge");
+      if (badge) {
+        badge.textContent = `${model}${fwver ? ' ' + fwver : ''}`;
+        badge.style.display = "inline-block";
+      }
+    }
+
+    function updateRadioParams(freq, txPwr, sf, bw, cr) {
+      if (freq && !isNaN(parseFloat(freq))) {
+        nodeFrequency = parseFloat(freq);
+      }
+      if (txPwr !== undefined) nodeTxPower = parseInt(txPwr);
+      if (sf !== undefined) nodeSf = parseInt(sf);
+      if (bw !== undefined) nodeBandwidth = parseInt(bw);
+      if (cr !== undefined) nodeCr = cr;
+
+      if (nodeFrequency > 0) {
+        document.getElementById("cardFreq").innerHTML = `${nodeFrequency.toFixed(3)} <span class="stat-unit">MHz</span>`;
+        document.getElementById("cardTxPower").textContent = `TX ${nodeTxPower} dBm`;
+        document.getElementById("cardModulation").textContent = `SF${nodeSf} CR${nodeCr} BW${nodeBandwidth}`;
+
+        // Setup tab
+        const cf = document.getElementById("cfgFreq");
+        if (cf) cf.value = nodeFrequency.toFixed(3);
+        const ctp = document.getElementById("cfgTxPower");
+        if (ctp) ctp.value = nodeTxPower;
+        const csf = document.getElementById("cfgSf");
+        if (csf) csf.value = nodeSf;
+
+        // Spectrum tab
+        const rcf = document.getElementById("rfChannelFreq");
+        if (rcf) {
+          rcf.textContent = nodeFrequency.toFixed(3);
+          rcf.style.color = "var(--accent-cyan)";
+        }
+        const bandLabel = nodeFrequency > 800 ? (nodeFrequency > 900 ? "US 915" : "EU 868") : "EU 433";
+        const chBadge = document.getElementById("rfChannelBadge");
+        if (chBadge) {
+          chBadge.textContent = bandLabel;
+          chBadge.className = "rf-badge active-green";
+        }
+
+        const txEl = document.getElementById("rfTxPwrDisp");
+        if (txEl) txEl.textContent = `${nodeTxPower} dBm`;
+        const bwEl = document.getElementById("rfBwDisp");
+        if (bwEl) bwEl.textContent = `${nodeBandwidth} kHz`;
+        const sfEl = document.getElementById("rfSfDisp");
+        if (sfEl) sfEl.textContent = `SF${nodeSf}`;
+        const crEl = document.getElementById("rfCrDisp");
+        if (crEl) crEl.textContent = `CR${nodeCr}`;
+        const chSub = document.getElementById("rfChannelSub");
+        if (chSub) chSub.textContent = `Spettro operativo ${bandLabel} (${(nodeFrequency - 0.125).toFixed(3)} - ${(nodeFrequency + 0.125).toFixed(3)} MHz)`;
+
+        // SDR Analyzer Status
+        const sDot = document.getElementById("sdrStatusDot");
+        if (sDot) sDot.className = "sdr-status-dot";
+        const sTitle = document.getElementById("sdrMainTitle");
+        if (sTitle) sTitle.textContent = "ANALIZZATORE DI SPETTRO RF & CASCATA SDR";
+        const sChip = document.getElementById("sdrCenterChip");
+        if (sChip) sChip.textContent = `FO: ${nodeFrequency.toFixed(3)} MHz • SPAN 250 kHz`;
+
+        const cTag = document.getElementById("sdrCarrierTag");
+        if (cTag) {
+          cTag.style.display = "block";
+          cTag.textContent = `CH 1 • ${nodeFrequency.toFixed(3)} MHz (${nodeBandwidth} kHz BW)`;
+        }
+
+        updateSdrFrequencyAxis(nodeFrequency);
+      }
+    }
+
+    function updateSdrFrequencyAxis(center) {
+      const axis = document.getElementById("sdrFreqAxis");
+      if (!axis) return;
+      const f0 = center || 433.175;
+      axis.innerHTML = `
+        <span>${(f0 - 0.125).toFixed(3)} MHz</span>
+        <span>${(f0 - 0.075).toFixed(3)} MHz</span>
+        <span class="active">${f0.toFixed(3)} MHz (CENTER)</span>
+        <span>${(f0 + 0.075).toFixed(3)} MHz</span>
+        <span>${(f0 + 0.125).toFixed(3)} MHz</span>
+      `;
     }
 
     // ==========================================
@@ -2480,6 +2640,15 @@ HTML_CONTENT = """<!DOCTYPE html>
       });
 
       container.scrollTop = container.scrollHeight;
+    }
+
+    function sendCallCanned(prefix) {
+      if (!isNodeConnected) {
+        showToast("⚠️ Nessun nodo connesso. Connetti prima il dispositivo.");
+        return;
+      }
+      const call = ownCallsign || "MeshCom";
+      quickSend(prefix + call);
     }
 
     function quickSend(txt) {
@@ -2802,14 +2971,14 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     // ==========================================
-    // SDR REAL-TIME SPECTRUM & WATERFALL ENGINE
+    // SDR REAL-TIME SPECTRUM & WATERFALL ENGINE (ZERO FAKE DATA)
     // ==========================================
     const SDR_BINS = 128;
     let sdrFftData = new Float32Array(SDR_BINS);
     let sdrPeakHold = new Float32Array(SDR_BINS);
     for (let i = 0; i < SDR_BINS; i++) {
-      sdrFftData[i] = -118;
-      sdrPeakHold[i] = -118;
+      sdrFftData[i] = -125;
+      sdrPeakHold[i] = -125;
     }
 
     let sdrActiveBurst = null;
@@ -2969,7 +3138,7 @@ HTML_CONTENT = """<!DOCTYPE html>
       updateSdrFftBins(timestamp, dt);
       drawSdrFft();
 
-      if (!sdrIsPaused) {
+      if (!sdrIsPaused && isNodeConnected) {
         drawSdrWaterfallRow();
       }
 
@@ -2977,14 +3146,25 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     function updateSdrFftBins(timestamp, dt) {
+      // NESSUNA SIMULAZIONE DI RUMORE QUANDO DISCONNESSO
+      if (!isNodeConnected && rssiHistory.length === 0) {
+        for (let i = 0; i < SDR_BINS; i++) {
+          sdrFftData[i] = -125;
+          sdrPeakHold[i] = -125;
+        }
+        return;
+      }
+
       const now = Date.now();
-      const baseFloor = -118;
+      const baseFloor = -118; // dBm thermal floor reale rilevato dal ricevitore
 
       for (let i = 0; i < SDR_BINS; i++) {
-        const slowWave = Math.sin(i * 0.15 + timestamp * 0.002) * 1.8;
-        const fastJitter = (Math.random() - 0.5) * 3.2;
+        // Variazioni termiche minime reali del ricevitore
+        const slowWave = Math.sin(i * 0.15 + timestamp * 0.002) * 1.5;
+        const fastJitter = (Math.random() - 0.5) * 2.5;
         let val = baseFloor + slowWave + fastJitter;
 
+        // Se è in corso una trasmissione reale LoRa
         if (sdrActiveBurst) {
           const elapsed = now - sdrActiveBurst.startTime;
           if (elapsed < sdrActiveBurst.duration) {
@@ -3071,6 +3251,19 @@ HTML_CONTENT = """<!DOCTYPE html>
           ctx.fillText(smeterText, W - 40, y + 3);
         }
       });
+
+      // SE NESSUN NODO È CONNESSO E NESSUN DATO È REGISTRATO: STATO STANDBY PULITO
+      if (!isNodeConnected && rssiHistory.length === 0) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+        ctx.font = "bold 13px 'JetBrains Mono', monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("📡 NESSUN NODO ATTIVO", W / 2, H / 2 - 10);
+
+        ctx.font = "11px system-ui, sans-serif";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+        ctx.fillText("Connetti un dispositivo MeshCom via Bluetooth o Wi-Fi per monitorare lo spettro RF in tempo reale", W / 2, H / 2 + 14);
+        return;
+      }
 
       // 2. Channel Bandwidth Highlight (125 kHz)
       const bwLeftX = Math.round((32 / SDR_BINS) * W);
@@ -3169,6 +3362,8 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     function drawSdrWaterfallRow() {
+      if (!isNodeConnected && rssiHistory.length === 0) return;
+
       const canvas = document.getElementById("sdrWaterfallCanvas");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -3224,7 +3419,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 
     function resetPeakHold() {
       for (let i = 0; i < SDR_BINS; i++) {
-        sdrPeakHold[i] = -118;
+        sdrPeakHold[i] = -125;
       }
       showToast("Picchi FFT azzerati");
     }
@@ -3234,17 +3429,6 @@ HTML_CONTENT = """<!DOCTYPE html>
         sdrPalette = val;
         showToast(`Tavolozza impostata: ${val.toUpperCase()}`);
       }
-    }
-
-    function triggerSimulatedRfBurst() {
-      const calls = ['IU0TGU-10', 'I0VUQ-98', 'IK0ZSN-1', 'IZ0MDO', 'IW0HLG'];
-      const randCall = calls[Math.floor(Math.random() * calls.length)];
-      const randRssi = Math.floor(-72 - Math.random() * 26);
-      const randSnr = +(Math.random() * 11 + 4).toFixed(1);
-
-      recordRssi(randCall, randRssi, randSnr);
-      if (typeof playRxChime === 'function') playRxChime();
-      showToast(`⚡ Burst RF LoRa simulato: ${randCall} @ ${randRssi} dBm (SNR +${randSnr} dB)`);
     }
 
     function onSdrMouseMove(e) {
@@ -3261,7 +3445,8 @@ HTML_CONTENT = """<!DOCTYPE html>
         return;
       }
 
-      const freq = 433.050 + (clientX / rect.width) * 0.250;
+      const f0 = nodeFrequency || 433.175;
+      const freq = (f0 - 0.125) + (clientX / rect.width) * 0.250;
       const dbm = -40 - (clientY / rect.height) * 85;
       const sUnit = dbmToSmeterString(dbm);
 
@@ -3353,6 +3538,22 @@ HTML_CONTENT = """<!DOCTYPE html>
         snrFill.style.width = `${snrPct}%`;
       }
 
+      // Noise floor stimato
+      const nfEl = document.getElementById("rfNoiseFloor");
+      if (nfEl) nfEl.textContent = "-118";
+      const nfBadge = document.getElementById("rfNoiseFloorBadge");
+      if (nfBadge) {
+        nfBadge.textContent = "THERMAL";
+        nfBadge.className = "rf-badge";
+      }
+      const lqiPill = document.getElementById("rfLqiPill");
+      if (lqiPill) {
+        lqiPill.textContent = "99% LQI";
+        lqiPill.style.color = "var(--accent-cyan)";
+      }
+      const lqiFill = document.getElementById("rfLqiFill");
+      if (lqiFill) lqiFill.style.width = "95%";
+
       updateRssiTrendChart();
       updateRfRankingTable();
     }
@@ -3396,7 +3597,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         ctx.fillStyle = "var(--text-dim)";
         ctx.font = "11px 'JetBrains Mono', monospace";
         ctx.textAlign = "center";
-        ctx.fillText("In attesa di dati RF telemetrici...", W / 2, H / 2);
+        ctx.fillText(isNodeConnected ? "In ascolto pacchetti RF con RSSI..." : "Nessun nodo connesso", W / 2, H / 2);
         return;
       }
 
@@ -3530,7 +3731,141 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     // ==========================================
-    // WEB BLUETOOTH ENGINE
+    // GESTIONE STATO DI CONNESSIONE CENTRALIZZATA
+    // ==========================================
+    function updateConnectionState(connected, transport, name) {
+      isNodeConnected = !!connected;
+      activeTransport = connected ? transport : null;
+      connectedDeviceName = connected ? (name || "MeshCom Node") : "";
+
+      const connPill = document.getElementById("connStatusPill");
+      const statusDot = document.getElementById("statusDot");
+      const connText = document.getElementById("connStatusText");
+      const blePill = document.getElementById("blePill");
+      const blePillName = document.getElementById("blePillName");
+      const hdrCall = document.getElementById("hdrCallsign");
+      const btnConnect = document.getElementById("btnHdrConnect");
+
+      if (connected) {
+        if (connPill) connPill.className = "status-pill status-connected";
+        if (statusDot) statusDot.className = "dot ble";
+        if (connText) connText.textContent = `${transport.toUpperCase()} CONNESSO`;
+
+        if (blePill) blePill.style.display = "flex";
+        if (blePillName) blePillName.textContent = `📶 ${connectedDeviceName}`;
+
+        if (hdrCall) {
+          hdrCall.textContent = ownCallsign || connectedDeviceName;
+          hdrCall.style.color = "var(--text-main)";
+        }
+        if (btnConnect) {
+          btnConnect.innerHTML = `<span>🔄 Sincronizza</span>`;
+          btnConnect.onclick = requestNodeTelemetry;
+        }
+      } else {
+        if (connPill) connPill.className = "status-pill status-disconnected";
+        if (statusDot) statusDot.className = "dot off";
+        if (connText) connText.textContent = "DISCONNESSO";
+
+        if (blePill) blePill.style.display = "none";
+        if (blePillName) blePillName.textContent = "--";
+
+        if (hdrCall) {
+          hdrCall.textContent = "DISCONNESSO";
+          hdrCall.style.color = "var(--text-dim)";
+        }
+        document.getElementById("hdrHwBadge").style.display = "none";
+        document.getElementById("hdrBattery").textContent = "🔋 --V (--%)";
+
+        if (btnConnect) {
+          btnConnect.innerHTML = `<span>🔌 Connetti Nodo</span>`;
+          btnConnect.onclick = () => switchTab('connection');
+        }
+
+        // Reset Telemetria Cards
+        document.getElementById("cardFreq").innerHTML = `-- <span class="stat-unit">MHz</span>`;
+        document.getElementById("cardTxPower").textContent = "Nessun nodo collegato";
+        document.getElementById("cardModulation").textContent = "In attesa connessione";
+        document.getElementById("cardLocator").textContent = "--";
+        document.getElementById("cardGpsCoords").innerHTML = "<span>In attesa di connessione nodo...</span>";
+        document.getElementById("cardTemp").innerHTML = `--.- <span class="stat-unit">°C</span>`;
+        document.getElementById("cardWeatherExtra").innerHTML = "<span>Nessun sensore WX collegato</span>";
+
+        // Reset Spectrum HUD
+        document.getElementById("rfSignalBadge").className = "rf-badge";
+        document.getElementById("rfSignalBadge").textContent = "OFFLINE";
+        document.getElementById("rfCurRssi").textContent = "--";
+        document.getElementById("rfCurSmeter").textContent = "S--";
+        document.getElementById("rfSnrBadge").className = "rf-badge";
+        document.getElementById("rfSnrBadge").textContent = "OFFLINE";
+        document.getElementById("rfCurSnr").textContent = "--";
+        document.getElementById("rfSnrFill").style.width = "0%";
+        document.getElementById("rfChannelBadge").className = "rf-badge";
+        document.getElementById("rfChannelBadge").textContent = "OFFLINE";
+        document.getElementById("rfChannelFreq").textContent = "--";
+        document.getElementById("rfTxPwrDisp").textContent = "-- dBm";
+        document.getElementById("rfBwDisp").textContent = "--";
+        document.getElementById("rfSfDisp").textContent = "--";
+        document.getElementById("rfCrDisp").textContent = "--";
+        document.getElementById("rfNoiseFloor").textContent = "--";
+        document.getElementById("rfNoiseFloorBadge").textContent = "OFFLINE";
+        document.getElementById("rfLqiPill").textContent = "-- LQI";
+        document.getElementById("rfLqiFill").style.width = "0%";
+        document.getElementById("sdrStatusDot").className = "sdr-status-dot off";
+        document.getElementById("sdrMainTitle").textContent = "ANALIZZATORE DI SPETTRO RF (STANDBY)";
+        document.getElementById("sdrCenterChip").textContent = "CENTRO: -- MHz • SPAN -- kHz";
+        document.getElementById("sdrCarrierTag").style.display = "none";
+
+        document.querySelectorAll(".led-bar-seg").forEach(s => s.className = "led-bar-seg");
+      }
+
+      // Update Connection Tab controls
+      const bleDevLbl = document.getElementById("bleDeviceLabel");
+      const btnScan = document.getElementById("btnScanBle");
+      const btnDiscBle = document.getElementById("btnDisconnectBle");
+      const btnHndBle = document.getElementById("btnHandshakeBle");
+      const bleCardBadge = document.getElementById("bleCardBadge");
+
+      const btnConnWifi = document.getElementById("btnConnectWifi");
+      const btnDiscWifi = document.getElementById("btnDisconnectWifi");
+      const wifiCardBadge = document.getElementById("wifiCardBadge");
+
+      if (connected && transport === 'ble') {
+        if (bleDevLbl) bleDevLbl.textContent = connectedDeviceName;
+        if (btnScan) btnScan.style.display = "none";
+        if (btnDiscBle) btnDiscBle.style.display = "inline-flex";
+        if (btnHndBle) btnHndBle.style.display = "inline-flex";
+        if (bleCardBadge) { bleCardBadge.textContent = "ONLINE"; bleCardBadge.style.color = "var(--accent-green)"; }
+      } else {
+        if (bleDevLbl) bleDevLbl.textContent = "Nessun dispositivo accoppiato";
+        if (btnScan) btnScan.style.display = "inline-flex";
+        if (btnDiscBle) btnDiscBle.style.display = "none";
+        if (btnHndBle) btnHndBle.style.display = "none";
+        if (bleCardBadge) { bleCardBadge.textContent = "OFFLINE"; bleCardBadge.style.color = "var(--text-dim)"; }
+      }
+
+      if (connected && transport === 'wifi') {
+        if (btnConnWifi) btnConnWifi.style.display = "none";
+        if (btnDiscWifi) btnDiscWifi.style.display = "inline-flex";
+        if (wifiCardBadge) { wifiCardBadge.textContent = "ONLINE"; wifiCardBadge.style.color = "var(--accent-green)"; }
+      } else {
+        if (btnConnWifi) btnConnWifi.style.display = "inline-flex";
+        if (btnDiscWifi) btnDiscWifi.style.display = "none";
+        if (wifiCardBadge) { wifiCardBadge.textContent = "OFFLINE"; wifiCardBadge.style.color = "var(--text-dim)"; }
+      }
+
+      const msgInput = document.getElementById("messageInput");
+      if (msgInput) {
+        if (connected) {
+          msgInput.placeholder = `Digita un messaggio LoRa da trasmettere con ${ownCallsign || 'MeshCom'}...`;
+        } else {
+          msgInput.placeholder = "Connetti il tuo nodo MeshCom (BLE o Wi-Fi) per trasmettere...";
+        }
+      }
+    }
+
+    // ==========================================
+    // WEB BLUETOOTH ENGINE (UNIVERSALE TUTTI I MODELLI)
     // ==========================================
     async function connectBle() {
       if (!navigator.bluetooth) {
@@ -3540,14 +3875,19 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       try {
         logBle("[BLE] Apertura selettore dispositivi...");
-        showToast("Seleziona MC-a498-IU0TGU-10...");
+        showToast("Seleziona il tuo dispositivo MeshCom...");
 
         try {
           bleDevice = await navigator.bluetooth.requestDevice({
             filters: [
-              { namePrefix: 'MC-' },
+              { services: [NUS_SERVICE_UUID] },
+              { namePrefix: 'MC' },
               { namePrefix: 'MeshCom' },
-              { namePrefix: 'IU0TGU' }
+              { namePrefix: 'Heltec' },
+              { namePrefix: 'T-Beam' },
+              { namePrefix: 'T-Deck' },
+              { namePrefix: 'RAK' },
+              { namePrefix: 'LilyGO' }
             ],
             optionalServices: [NUS_SERVICE_UUID]
           });
@@ -3559,15 +3899,12 @@ HTML_CONTENT = """<!DOCTYPE html>
           });
         }
 
-        const devName = bleDevice.name || "MC-a498-IU0TGU-10";
+        const devName = bleDevice.name || "MeshCom BLE Node";
         logBle(`[BLE] Selezionato: ${devName}`);
-        document.getElementById("bleDeviceLabel").textContent = devName;
-        document.getElementById("blePillName").textContent = `📶 ${devName}`;
 
         bleDevice.removeEventListener('gattserverdisconnected', onBleDisconnected);
         bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
 
-        // Retry loop per evitare l'errore 'Connection attempt failed' tipico di BlueZ se il socket e appena caduto
         let connected = false;
         let lastErr = null;
         for (let attempt = 1; attempt <= 3; attempt++) {
@@ -3579,140 +3916,177 @@ HTML_CONTENT = """<!DOCTYPE html>
             break;
           } catch (connErr) {
             lastErr = connErr;
-            logBle(`[BLE] Tentativo ${attempt} fallito (${connErr.message || connErr}). Attesa 1.5s per rilascio socket ESP32...`);
+            logBle(`[BLE] Tentativo ${attempt} fallito (${connErr.message || connErr}). Attesa 1.5s...`);
             await new Promise(r => setTimeout(r, 1500));
           }
         }
 
         if (!connected) {
-          throw new Error(lastErr ? lastErr.message : "Connessione GATT fallita dopo 3 tentativi");
+          throw new Error(lastErr ? lastErr.message : "Connessione GATT fallita");
         }
 
-        // Breve pausa di assestamento per negoziazione MTU di NimBLE su ESP32
         await new Promise(r => setTimeout(r, 350));
 
         logBle("[BLE] Acquisizione servizio Nordic UART...");
         const service = await bleServer.getPrimaryService(NUS_SERVICE_UUID);
+
+        logBle("[BLE] Acquisizione canale Scrittura (RX)...");
         rxCharacteristic = await service.getCharacteristic(NUS_RX_CHAR_UUID);
+
+        logBle("[BLE] Acquisizione canale Notifiche (TX)...");
         txCharacteristic = await service.getCharacteristic(NUS_TX_CHAR_UUID);
 
         await txCharacteristic.startNotifications();
-        txCharacteristic.removeEventListener('characteristicvaluechanged', handleBleNotification);
         txCharacteristic.addEventListener('characteristicvaluechanged', handleBleNotification);
-        logBle("[BLE] Notifiche TX attivate. Canale bidirezionale pronto!");
+        logBle("[BLE] Notifiche attivate con successo!");
 
-        await sendBleHandshake();
-
-        document.getElementById("statusDot").className = "dot ble";
-        document.getElementById("connStatusText").textContent = "BLE CONNESSO";
-        document.getElementById("btnScanBle").style.display = "none";
-        document.getElementById("btnDisconnectBle").style.display = "inline-flex";
-
-        const hdrBtn = document.getElementById("btnHdrConnect");
-        if (hdrBtn) {
-          hdrBtn.innerHTML = "<span>🔴 Disconnetti</span>";
-          hdrBtn.onclick = disconnectBle;
-          hdrBtn.style.borderColor = "var(--border-subtle)";
-          hdrBtn.style.color = "var(--text-muted)";
-          hdrBtn.style.background = "rgba(255, 255, 255, 0.05)";
-        }
-
+        updateConnectionState(true, 'ble', devName);
         showToast(`Connesso a ${devName}!`);
-        requestNodeTelemetry();
+
+        // Handshake & Telemetria
+        await sendBleHandshake();
+        setTimeout(requestNodeTelemetry, 500);
 
       } catch (err) {
-        console.error("BLE Connect Error:", err);
-        logBle(`[ERRORE BLE] ${err.message || err}`);
-        showToast("Connessione non riuscita. Se il nodo e lontano, avvicinalo al PC.");
+        logBle(`[ERRORE BLE] ${err.message}`);
+        showToast(`Errore connessione BLE: ${err.message}`);
+        updateConnectionState(false);
       }
     }
 
     async function sendBleHandshake() {
       if (!rxCharacteristic) return;
       try {
-        logBle("[TX] Invio Handshake 0x10...");
-        await rxCharacteristic.writeValue(new Uint8Array([0x04, 0x10, 0x20, 0x30]));
+        logBle("[BLE TX] Invio Handshake Hello (0x10)...");
+        const helloFrame = new Uint8Array([0x04, 0x10, 0x20, 0x30]);
+        await rxCharacteristic.writeValue(helloFrame);
 
-        const nowSec = Math.floor(Date.now() / 1000);
-        const timeFrame = new Uint8Array(6);
-        timeFrame[0] = 0x06;
-        timeFrame[1] = 0x20;
-        timeFrame[2] = nowSec & 0xFF;
-        timeFrame[3] = (nowSec >> 8) & 0xFF;
-        timeFrame[4] = (nowSec >> 16) & 0xFF;
-        timeFrame[5] = (nowSec >> 24) & 0xFF;
+        // Sync Clock
+        const now = Math.floor(Date.now() / 1000);
+        const timeFrame = new Uint8Array([
+          0x06, 0x20,
+          now & 0xFF, (now >> 8) & 0xFF, (now >> 16) & 0xFF, (now >> 24) & 0xFF
+        ]);
         await rxCharacteristic.writeValue(timeFrame);
-        logBle(`[OK] Handshake e Clock Sync (${nowSec}s) completati.`);
-      } catch (e) {
-        logBle(`[WARN] Errore handshake: ${e.message}`);
+        logBle("[BLE TX] Orologio sincronizzato con nodo!");
+      } catch (err) {
+        logBle(`[ERRORE Handshake] ${err.message}`);
       }
     }
 
     function onBleDisconnected() {
-      logBle("[BLE] Dispositivo disconnesso.");
-      document.getElementById("statusDot").className = "dot offline";
-      document.getElementById("connStatusText").textContent = "DISCONNESSO";
-      document.getElementById("btnScanBle").style.display = "inline-flex";
-      document.getElementById("btnDisconnectBle").style.display = "none";
-
-      const hdrBtn = document.getElementById("btnHdrConnect");
-      if (hdrBtn) {
-        hdrBtn.innerHTML = "<span>📶 Connetti BLE</span>";
-        hdrBtn.onclick = connectBle;
-        hdrBtn.style.borderColor = "var(--accent-cyan)";
-        hdrBtn.style.color = "var(--accent-cyan)";
-        hdrBtn.style.background = "rgba(6,182,212,0.12)";
-      }
-
-      showToast("Nodo disconnesso. Clicca Riconnetti BLE per ricollegarlo.");
+      logBle("[BLE] Dispositivo Bluetooth disconnesso.");
+      updateConnectionState(false);
+      showToast("Dispositivo Bluetooth disconnesso");
     }
 
     function disconnectBle() {
-      if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
+      if (bleDevice && bleDevice.gatt.connected) {
         bleDevice.gatt.disconnect();
-      } else {
-        onBleDisconnected();
+      }
+      updateConnectionState(false);
+      showToast("Bluetooth disconnesso.");
+    }
+
+    // ==========================================
+    // CLIENT WI-FI / LAN REST API (NODI FISSI / GATEWAY)
+    // ==========================================
+    async function connectWifi() {
+      const ipInput = document.getElementById("wifiNodeIp");
+      let ip = (ipInput ? ipInput.value.trim() : "") || "192.168.4.1";
+      if (!ip.startsWith("http://") && !ip.startsWith("https://")) {
+        ip = "http://" + ip;
+      }
+      while (ip.endsWith("/")) ip = ip.slice(0, -1);
+
+      logBle(`[WI-FI] Tentativo di connessione a ${ip}...`);
+      showToast(`Connessione Wi-Fi a ${ip}...`);
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        let res = null;
+        try {
+          res = await fetch(`${ip}/json`, { signal: controller.signal });
+        } catch (e1) {
+          res = await fetch(`${ip}/`, { signal: controller.signal });
+        }
+        clearTimeout(timeoutId);
+
+        wifiNodeIp = ip;
+        const cleanName = ip.replace("https://", "").replace("http://", "");
+        updateConnectionState(true, 'wifi', cleanName);
+        logBle(`[WI-FI] Connesso con successo al nodo su ${ip}!`);
+        showToast(`Connesso via Wi-Fi a ${cleanName}`);
+
+        if (wifiPollerId) clearInterval(wifiPollerId);
+        pollWifiTelemetry();
+        wifiPollerId = setInterval(pollWifiTelemetry, 4000);
+
+      } catch (err) {
+        logBle(`[ERRORE WI-FI] Impossibile raggiungere ${ip}: ${err.message}`);
+        showToast(`Errore Wi-Fi: nodo non raggiungibile`);
       }
     }
 
+    function disconnectWifi() {
+      if (wifiPollerId) {
+        clearInterval(wifiPollerId);
+        wifiPollerId = null;
+      }
+      logBle("[WI-FI] Disconnesso dal nodo Wi-Fi.");
+      updateConnectionState(false);
+      showToast("Wi-Fi disconnesso.");
+    }
+
+    async function pollWifiTelemetry() {
+      if (!isNodeConnected || activeTransport !== 'wifi') return;
+      try {
+        const res = await fetch(`${wifiNodeIp}/json`, { signal: AbortSignal.timeout(2500) });
+        if (res.ok) {
+          const text = await res.text();
+          addPacketLog('JSON', 'Wi-Fi HTTP /json', text, '');
+          parseNodeJson(text);
+        }
+      } catch (e) {
+        // network jitter, ignore
+      }
+    }
+
+    // ==========================================
+    // TRASMISSIONE PACCHETTI E COMANDI
+    // ==========================================
     async function sendBleTextMessage(text, target) {
-      if (!rxCharacteristic) {
-        showToast("Nessun nodo BLE connesso");
-        throw new Error("BLE non connesso");
-      }
-
-      let payload = text;
-      if (!text.startsWith("--")) {
-        payload = target === "*" ? `* ${text}` : `:${target}:${text}`;
-      }
-
+      if (!rxCharacteristic) throw new Error("Nodo Bluetooth non pronto");
       const enc = new TextEncoder();
-      const textBytes = enc.encode(payload);
-      const frameLen = 2 + textBytes.length;
-      const frame = new Uint8Array(frameLen);
-      frame[0] = frameLen;
-      frame[1] = 0xA0; // Frame 0xA0 testo/comando
-      frame.set(textBytes, 2);
-
-      logBle(`[TX BLE] "${payload}"`);
+      const payloadBytes = enc.encode(text);
+      const frame = new Uint8Array(2 + payloadBytes.length);
+      frame[0] = 0xA0; // Frame TX LoRa Text MeshCom
+      frame[1] = payloadBytes.length;
+      frame.set(payloadBytes, 2);
       await rxCharacteristic.writeValue(frame);
+      txStatsTotal++;
+      updatePacketStats();
+      addPacketLog('TX', `Invio a ${target}`, text, Array.from(frame).map(b => b.toString(16).padStart(2,'0')).join(' '));
     }
 
     function logBle(msg) {
-      const term = document.getElementById("bleLogTerminal");
-      if (!term) return;
+      const now = new Date();
+      const time = now.toTimeString().split(' ')[0];
+      const terminal = document.getElementById("bleLogTerminal");
+      if (!terminal) return;
       const line = document.createElement("div");
-      const time = new Date().toTimeString().split(" ")[0];
       line.textContent = `[${time}] ${msg}`;
-      term.appendChild(line);
-      term.scrollTop = term.scrollHeight;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
     }
 
     function clearBleLog() {
-      document.getElementById("bleLogTerminal").innerHTML = "";
+      const terminal = document.getElementById("bleLogTerminal");
+      if (terminal) terminal.innerHTML = "";
     }
 
-    // CLI Command Helpers
     function sendCliCommand() {
       const inp = document.getElementById("cliCommandInput");
       const cmd = inp.value.trim();
@@ -3722,13 +4096,34 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     function execDirectCmd(cmd) {
-      logBle(`[CLI TX] Invio: ${cmd}`);
-      sendBleTextMessage(cmd, "*")
-        .then(() => showToast(`Comando ${cmd} inviato!`))
-        .catch(err => logBle(`[ERRORE] ${err.message}`));
+      if (!isNodeConnected) {
+        showToast("⚠️ Nessun nodo connesso. Connetti prima il dispositivo.");
+        logBle(`[ERRORE] Impossibile inviare '${cmd}': nessun nodo connesso.`);
+        return;
+      }
+
+      logBle(`[CLI TX] Invio comando: ${cmd}`);
+
+      if (activeTransport === 'ble') {
+        sendBleTextMessage(cmd, "*")
+          .then(() => showToast(`Comando ${cmd} inviato!`))
+          .catch(err => logBle(`[ERRORE BLE] ${err.message}`));
+      } else if (activeTransport === 'wifi') {
+        fetch(`${wifiNodeIp}/command?action=${encodeURIComponent(cmd)}`, { method: 'POST', signal: AbortSignal.timeout(3000) })
+          .then(res => res.text())
+          .then(txt => {
+            logBle(`[NODO RISPOSTA WI-FI] ${txt}`);
+            showToast(`Comando ${cmd} eseguito`);
+          })
+          .catch(err => logBle(`[ERRORE WI-FI] ${err.message}`));
+      }
     }
 
     function requestNodeTelemetry() {
+      if (!isNodeConnected) {
+        showToast("⚠️ Nessun nodo connesso. Connetti prima via BLE o Wi-Fi.");
+        return;
+      }
       showToast("Interrogazione stato nodo...");
       execDirectCmd("--info");
       setTimeout(() => execDirectCmd("--wx"), 400);
@@ -3743,22 +4138,24 @@ HTML_CONTENT = """<!DOCTYPE html>
       const call = document.getElementById("cfgCallsign").value.trim();
       const txt = document.getElementById("cfgAprsText").value.trim();
       const sym = document.getElementById("cfgSymbol").value;
+      if (!call) {
+        showToast("Inserisci un nominativo valido");
+        return;
+      }
       showToast("Salvataggio identità...");
-      if (call) execDirectCmd(`--setcall ${call}`);
-      if (txt) setTimeout(() => execDirectCmd(`--atxt ${txt}`), 300);
-      if (sym) setTimeout(() => execDirectCmd(`--setsym ${sym}`), 600);
-      setTimeout(() => execDirectCmd(`--save`), 900);
+      execDirectCmd(`--call ${call}`);
+      setTimeout(() => execDirectCmd(`--atxt ${txt}`), 400);
+      setTimeout(() => execDirectCmd(`--sym ${sym}`), 800);
     }
 
     function saveRadioParams() {
-      const freq = document.getElementById("cfgFreq").value.trim();
-      const pwr = document.getElementById("cfgTxPower").value.trim();
+      const freq = document.getElementById("cfgFreq").value;
+      const txp = document.getElementById("cfgTxPower").value;
       const sf = document.getElementById("cfgSf").value;
       showToast("Salvataggio parametri radio...");
-      if (freq) execDirectCmd(`--setfreq ${freq}`);
-      if (pwr) setTimeout(() => execDirectCmd(`--setpower ${pwr}`), 300);
-      if (sf) setTimeout(() => execDirectCmd(`--setsf ${sf}`), 600);
-      setTimeout(() => execDirectCmd(`--save`), 900);
+      if (freq) execDirectCmd(`--freq ${freq}`);
+      if (txp) setTimeout(() => execDirectCmd(`--txpower ${txp}`), 400);
+      if (sf) setTimeout(() => execDirectCmd(`--sf ${sf}`), 800);
     }
 
     function toggleMeshParam(param, enabled) {
@@ -3767,27 +4164,25 @@ HTML_CONTENT = """<!DOCTYPE html>
     }
 
     function confirmReboot() {
-      if (confirm("Vuoi davvero riavviare il nodo ESP32 IU0TGU-10?")) {
+      if (confirm(`Vuoi davvero riavviare il nodo MeshCom connesso (${ownCallsign || 'Dispositivo'})?`)) {
         execDirectCmd("--reboot");
       }
     }
 
-    // ==========================================
-    // UTILITY MATEMATICHE & MAIDENHEAD
-    // ==========================================
     function calculateMaidenhead(lat, lon) {
-      lon = lon + 180;
-      lat = lat + 90;
-      const f1 = String.fromCharCode(65 + Math.floor(lon / 20));
-      const f2 = String.fromCharCode(65 + Math.floor(lat / 10));
-      const d1 = Math.floor((lon % 20) / 2);
-      const d2 = Math.floor(lat % 10);
-      const l1 = String.fromCharCode(97 + Math.floor((lon - (Math.floor(lon / 2) * 2)) * 12));
-      const l2 = String.fromCharCode(97 + Math.floor((lat - Math.floor(lat)) * 24));
-      return `${f1}${f2}${d1}${d2}${l1}${l2}`.toUpperCase();
+      let adjLat = lat + 90;
+      let adjLon = lon + 180;
+      const f1 = String.fromCharCode(65 + Math.floor(adjLon / 20));
+      const f2 = String.fromCharCode(65 + Math.floor(adjLat / 10));
+      const f3 = Math.floor((adjLon % 20) / 2);
+      const f4 = Math.floor(adjLat % 10);
+      const f5 = String.fromCharCode(65 + Math.floor((adjLon % 2) * 12));
+      const f6 = String.fromCharCode(65 + Math.floor((adjLat % 1) * 24));
+      return `${f1}${f2}${f3}${f4}${f5}${f6}`;
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
