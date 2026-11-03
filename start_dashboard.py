@@ -20,6 +20,38 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
+    def do_GET(self):
+        if self.path.startswith('/proxy?url='):
+            import urllib.parse
+            import urllib.request
+            target_url = urllib.parse.unquote(self.path[11:])
+            try:
+                req = urllib.request.Request(target_url, headers={'User-Agent': 'MeshCom-Tactical-Proxy/1.0'})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    content = response.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', response.headers.get('Content-Type', 'text/html; charset=utf-8'))
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', '*')
+                    self.end_headers()
+                    self.wfile.write(content)
+            except Exception as e:
+                self.send_response(502)
+                self.send_header('Content-Type', 'text/plain; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(f"Proxy error: {str(e)}".encode())
+            return
+        super().do_GET()
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', '*')
+        self.end_headers()
+
     def end_headers(self):
         # Header CORS e Permissions Policy per Bluetooth e Web Serial
         self.send_header('Access-Control-Allow-Origin', '*')

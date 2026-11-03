@@ -1975,7 +1975,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       initLeafletMap();
 
-      // Query periodica telemetria ogni 30s
+      // Query periodica telemetria ogni 30s se BLE
       setInterval(() => {
         if (activeMode === "ble" && rxCharacteristic) {
           sendBleTextMessage("--info", "*");
@@ -1983,7 +1983,23 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
       }, 30000);
 
-      // Nessuna interrogazione finché nessun nodo è connesso!
+      // Recupero IP salvato o parametro URL ?wifi=IP per connessione automatica
+      const urlParams = new URLSearchParams(window.location.search);
+      const wifiInput = document.getElementById("wifiNodeIp");
+      const savedIp = localStorage.getItem("meshcom_wifi_ip");
+      if (savedIp && wifiInput) {
+        wifiInput.value = savedIp;
+      }
+      if (urlParams.has("wifi")) {
+        const queryIp = urlParams.get("wifi");
+        if (queryIp && wifiInput) {
+          wifiInput.value = queryIp;
+        }
+        setTimeout(() => connectWifi(), 400);
+      }
+      if (urlParams.has("tab")) {
+        setTimeout(() => switchTab(urlParams.get("tab")), 800);
+      }
     });
 
     // Orologio UTC
@@ -2671,6 +2687,34 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       txStatsTotal++;
       updatePacketStats();
+
+      if (activeTransport === 'wifi') {
+        const targetParam = (target === '*' ? '' : target);
+        const sendUrl = `/?sendmessage&tocall=${encodeURIComponent(targetParam)}&message=${encodeURIComponent(text)}`;
+        showToast(`Invio messaggio Wi-Fi su ${target}...`);
+        meshcomFetch(sendUrl)
+          .then(() => {
+            addMessage({
+              id: Date.now(),
+              src: ownCallsign || "TU",
+              dst: target,
+              text: text,
+              time: timeStr,
+              self: true,
+              delivered: true
+            });
+            input.value = "";
+            showToast(`Messaggio inviato a ${target}!`);
+            setTimeout(() => {
+              meshcomFetch('/?getmessages').then(h => h && parseMeshcomMessagesHtml(h));
+            }, 600);
+          })
+          .catch(err => {
+            logBle(`[ERRORE WI-FI TX] ${err.message}`);
+            showToast(`Errore invio Wi-Fi: ${err.message}`);
+          });
+        return;
+      }
 
       sendBleTextMessage(text, target)
         .then(() => {
@@ -3991,42 +4035,68 @@ HTML_CONTENT = """<!DOCTYPE html>
     // ==========================================
     // CLIENT WI-FI / LAN REST API (NODI FISSI / GATEWAY)
     // ==========================================
+    let seenWifiMsgKeys = new Set();
+    let seenWifiLogLines = new Set();
+    let wifiPollerCount = 0;
+
+    async function meshcomFetch(path) {
+      const cleanPath = path.startsWith('/') ? path : '/' + path;
+      const targetUrl = `${wifiNodeIp}${cleanPath}`;
+      // 1. Prova fetch diretta via LAN
+      try {
+        const res = await fetch(targetUrl, { signal: AbortSignal.timeout(3500) });
+        if (res.ok) return await res.text();
+      } catch (err) {
+        // 2. Fallback trasparente al proxy server locale per superare mixed content HTTPS o Private Network Access
+        try {
+          const proxyUrl = `/proxy?url=${encodeURIComponent(targetUrl)}`;
+          const resProxy = await fetch(proxyUrl, { signal: AbortSignal.timeout(4000) });
+          if (resProxy.ok) return await resProxy.text();
+        } catch (err2) {
+          throw err;
+        }
+      }
+      return null;
+    }
+
     async function connectWifi() {
       const ipInput = document.getElementById("wifiNodeIp");
-      let ip = (ipInput ? ipInput.value.trim() : "") || "192.168.4.1";
+      let ip = (ipInput ? ipInput.value.trim() : "") || "192.168.1.206";
       if (!ip.startsWith("http://") && !ip.startsWith("https://")) {
         ip = "http://" + ip;
       }
       while (ip.endsWith("/")) ip = ip.slice(0, -1);
 
-      logBle(`[WI-FI] Tentativo di connessione a ${ip}...`);
+      logBle(`[WI-FI] Tentativo di connessione al nodo MeshCom su ${ip}...`);
       showToast(`Connessione Wi-Fi a ${ip}...`);
 
+      wifiNodeIp = ip;
+      try { localStorage.setItem("meshcom_wifi_ip", ip); } catch(e) {}
+
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const infoHtml = await meshcomFetch('/?page=info');
+        if (!infoHtml) throw new Error("Nessuna risposta dal nodo MeshCom");
 
-        let res = null;
-        try {
-          res = await fetch(`${ip}/json`, { signal: controller.signal });
-        } catch (e1) {
-          res = await fetch(`${ip}/`, { signal: controller.signal });
-        }
-        clearTimeout(timeoutId);
-
-        wifiNodeIp = ip;
         const cleanName = ip.replace("https://", "").replace("http://", "");
         updateConnectionState(true, 'wifi', cleanName);
-        logBle(`[WI-FI] Connesso con successo al nodo su ${ip}!`);
+        logBle(`[WI-FI] ✅ Connesso con successo a MeshCom su ${ip}!`);
         showToast(`Connesso via Wi-Fi a ${cleanName}`);
 
+        // Parsing iniziale immediato di tutti i dati
+        parseMeshcomInfoHtml(infoHtml);
+        meshcomFetch('/?page=position').then(h => h && parseMeshcomPosHtml(h)).catch(() => {});
+        meshcomFetch('/?page=wx').then(h => h && parseMeshcomWxHtml(h)).catch(() => {});
+        meshcomFetch('/?page=mheard').then(h => h && parseMeshcomMheardHtml(h)).catch(() => {});
+        meshcomFetch('/?getmessages').then(h => h && parseMeshcomMessagesHtml(h)).catch(() => {});
+        meshcomFetch('/?page=rxlog').then(h => h && parseMeshcomRxLogHtml(h)).catch(() => {});
+
         if (wifiPollerId) clearInterval(wifiPollerId);
-        pollWifiTelemetry();
-        wifiPollerId = setInterval(pollWifiTelemetry, 4000);
+        wifiPollerCount = 0;
+        wifiPollerId = setInterval(pollWifiTelemetry, 3500);
 
       } catch (err) {
         logBle(`[ERRORE WI-FI] Impossibile raggiungere ${ip}: ${err.message}`);
-        showToast(`Errore Wi-Fi: nodo non raggiungibile`);
+        showToast(`Errore Wi-Fi: nodo non raggiungibile (${err.message})`);
       }
     }
 
@@ -4040,14 +4110,338 @@ HTML_CONTENT = """<!DOCTYPE html>
       showToast("Wi-Fi disconnesso.");
     }
 
+    function parseMeshcomInfoHtml(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const rows = doc.querySelectorAll("table tr");
+      const info = {};
+      rows.forEach(tr => {
+        const tds = tr.querySelectorAll("td");
+        if (tds.length >= 2) {
+          const k = tds[0].textContent.replace(/:/g, '').trim();
+          const v = tds[1].textContent.trim();
+          info[k] = v;
+        }
+      });
+
+      // Callsign proprio nodo
+      if (info['Call']) {
+        ownCallsign = info['Call'];
+        const hdrCall = document.getElementById("hdrCallsign");
+        if (hdrCall) {
+          hdrCall.textContent = ownCallsign;
+          hdrCall.style.color = "var(--text-main)";
+        }
+        const cfgCall = document.getElementById("cfgCallsign");
+        if (cfgCall) cfgCall.value = ownCallsign;
+        const rLab = document.getElementById("radarCenterLabel");
+        if (rLab) rLab.textContent = `TU (${ownCallsign})`;
+        const msgInp = document.getElementById("messageInput");
+        if (msgInp) msgInp.placeholder = `Digita un messaggio LoRa da trasmettere con ${ownCallsign}...`;
+      }
+
+      // Hardware & Firmware
+      const hw = info['Hardware'] || '';
+      const fw = info['Firmware'] || '';
+      if (hw || fw) {
+        detectHardwareModel(hw, fw);
+      }
+
+      // Parametri Radio RF (Frequenza, Potenza TX, SF, BW, CR)
+      const fMatch = (info['Frequency'] || '').match(/([\d.]+)/);
+      const pMatch = (info['TX Power'] || '').match(/([\d.]+)/);
+      const sfMatch = (info['Spreading Factor (SF)'] || '').match(/([\d]+)/);
+      const bwMatch = (info['Bandwidth'] || '').match(/([\d.]+)/);
+      const crMatch = (info['Coding Rate (CR)'] || '').match(/([\d]+)/);
+      if (fMatch) {
+        updateRadioParams(
+          parseFloat(fMatch[1]),
+          pMatch ? parseInt(pMatch[1]) : 22,
+          sfMatch ? parseInt(sfMatch[1]) : 11,
+          bwMatch ? parseFloat(bwMatch[1]) : 250,
+          crMatch ? parseInt(crMatch[1]) : 6
+        );
+      }
+
+      // Batteria
+      const batStr = info['Battery'] || '';
+      const batVMatch = batStr.match(/([\d.]+)V/);
+      const batPMatch = batStr.match(/\((\d+)%\)/);
+      if (batVMatch) {
+        const v = parseFloat(batVMatch[1]).toFixed(2);
+        const p = batPMatch ? batPMatch[1] : '--';
+        const hdrBat = document.getElementById("hdrBattery");
+        if (hdrBat) hdrBat.textContent = `🔋 ${v}V (${p}%)`;
+        const wxV = document.getElementById("wxBatV");
+        if (wxV) wxV.innerHTML = `${v} <span class="stat-unit">V</span>`;
+        const wxP = document.getElementById("wxBatP");
+        if (wxP) wxP.textContent = `Carica stimata: ${p}%`;
+      }
+
+      // RSSI Wi-Fi
+      const rssiMatch = (info['WiFi RSSI'] || '').match(/(-?\d+)/);
+      if (rssiMatch) {
+        const rVal = parseInt(rssiMatch[1]);
+        const badge = document.getElementById("wifiCardBadge");
+        if (badge) {
+          badge.textContent = `ONLINE (${rVal} dBm)`;
+          badge.style.color = "var(--accent-green)";
+        }
+      }
+
+      // APRS text
+      if (info['APRS text']) {
+        const cfgAprs = document.getElementById("cfgAprsText");
+        if (cfgAprs && !cfgAprs.value) cfgAprs.value = info['APRS text'];
+      }
+    }
+
+    function parseMeshcomPosHtml(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const rows = doc.querySelectorAll("table tr");
+      const pos = {};
+      rows.forEach(tr => {
+        const tds = tr.querySelectorAll("td");
+        if (tds.length >= 2) {
+          pos[tds[0].textContent.trim()] = tds[1].textContent.trim();
+        }
+      });
+
+      const latStr = pos['Latitude'] || '';
+      const lonStr = pos['Longitude'] || '';
+      const latM = latStr.match(/([\d.]+)\s*([NS])?/i);
+      const lonM = lonStr.match(/([\d.]+)\s*([EW])?/i);
+      if (latM && lonM) {
+        let lat = parseFloat(latM[1]);
+        if (latM[2] && latM[2].toUpperCase() === 'S') lat = -lat;
+        let lon = parseFloat(lonM[1]);
+        if (lonM[2] && lonM[2].toUpperCase() === 'W') lon = -lon;
+        if (!isNaN(lat) && !isNaN(lon) && (lat !== 0 || lon !== 0)) {
+          ownLat = lat;
+          ownLon = lon;
+          const loc = calculateMaidenhead(lat, lon);
+          const cardLoc = document.getElementById("cardLocator");
+          if (cardLoc) cardLoc.textContent = loc;
+          const altStr = pos['Altitude'] ? ` • Alt ${pos['Altitude']}m` : '';
+          const satStr = pos['Satellites'] && !pos['Satellites'].includes('0 -') ? ` (${pos['Satellites']})` : '';
+          const cardGps = document.getElementById("cardGpsCoords");
+          if (cardGps) {
+            cardGps.innerHTML = `<span>${lat.toFixed(4)}°, ${lon.toFixed(4)}°</span> • <span style="color:var(--accent-green)">Fix GPS${altStr}${satStr}</span>`;
+          }
+          updateOwnMapPosition(lat, lon);
+        }
+      }
+    }
+
+    function parseMeshcomWxHtml(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const rows = doc.querySelectorAll("table tr");
+      const wx = {};
+      rows.forEach(tr => {
+        const tds = tr.querySelectorAll("td");
+        if (tds.length >= 2) {
+          wx[tds[0].textContent.trim()] = tds[1].textContent.trim();
+        }
+      });
+
+      const tempM = (wx['Temperature'] || '').match(/(-?[\d.]+)/);
+      const humM = (wx['Humidity'] || '').match(/([\d.]+)/);
+      const pressM = (wx['QNH'] || wx['QFE'] || '').match(/([\d.]+)/);
+      const altM = (wx['Altitude asl'] || '').match(/([\d.]+)/);
+      const gasM = (wx['Gas'] || '').match(/([\d.]+)/);
+      const co2M = (wx['eCO2'] || '').match(/([\d.]+)/);
+
+      if (tempM && parseFloat(tempM[1]) !== 0) {
+        const el = document.getElementById("wxTemp");
+        if (el) el.innerHTML = `${parseFloat(tempM[1]).toFixed(1)} <span class="stat-unit">°C</span>`;
+      }
+      if (humM && parseFloat(humM[1]) !== 0) {
+        const el = document.getElementById("wxHum");
+        if (el) el.innerHTML = `${parseFloat(humM[1]).toFixed(0)} <span class="stat-unit">%</span>`;
+      }
+      if (pressM && parseFloat(pressM[1]) !== 0) {
+        const el = document.getElementById("wxPress");
+        if (el) el.innerHTML = `${parseFloat(pressM[1]).toFixed(1)} <span class="stat-unit">hPa</span>`;
+      }
+      if (altM && parseFloat(altM[1]) !== 0) {
+        const el = document.getElementById("wxAlt");
+        if (el) el.innerHTML = `${parseFloat(altM[1]).toFixed(0)} <span class="stat-unit">m</span>`;
+      }
+      if (gasM && parseFloat(gasM[1]) !== 0) {
+        const el = document.getElementById("wxGas");
+        if (el) el.innerHTML = `${parseFloat(gasM[1]).toFixed(1)} <span class="stat-unit">kΩ</span>`;
+      }
+      if (co2M && parseFloat(co2M[1]) !== 0) {
+        const el = document.getElementById("wxCo2");
+        if (el) el.textContent = `CO2: ${co2M[1]} ppm`;
+      }
+    }
+
+    function parseMeshcomMheardHtml(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const cards = doc.querySelectorAll(".cardlayout");
+      cards.forEach(card => {
+        const a = card.querySelector("a[href*='call=']");
+        if (!a) return;
+        const call = a.textContent.trim();
+        const timeSpan = card.querySelector(".cardlabel span.font-small");
+        const lastTime = timeSpan ? timeSpan.textContent.replace(/[()]/g, '').trim() : 'Adesso';
+
+        const data = {};
+        const wrapDivs = card.querySelectorAll(".flex-auto-wrap > div");
+        wrapDivs.forEach(d => {
+          const b = d.querySelector(".font-bold");
+          const v = d.querySelector("span:not(.font-bold)");
+          if (b && v) {
+            const k = b.textContent.replace(':', '').trim();
+            data[k] = v.textContent.trim();
+          }
+        });
+
+        let lat = null, lon = null;
+        if (data.Lat && data.Lon) {
+          const latM = data.Lat.match(/([NS])?([\d.]+)/i);
+          const lonM = data.Lon.match(/([EW])?([\d.]+)/i);
+          if (latM && lonM) {
+            lat = parseFloat(latM[2]);
+            if (latM[1] && latM[1].toUpperCase() === 'S') lat = -lat;
+            lon = parseFloat(lonM[2]);
+            if (lonM[1] && lonM[1].toUpperCase() === 'W') lon = -lon;
+          }
+        }
+
+        const rssiVal = data.RSSI ? parseInt(data.RSSI.replace('dBm', '').trim()) : -100;
+        const snrVal = data.SNR ? parseInt(data.SNR.replace('dB', '').trim()) : 0;
+        const distStr = data.Dist ? `${data.Dist.trim()} km` : 'Mesh';
+        const distKm = data.Dist ? parseFloat(data.Dist.trim()) : 0;
+
+        addOrUpdateMheard({
+          call: call,
+          type: data.Type || 'Nodo',
+          hardware: data.Hardware || 'MeshCom',
+          dist: distStr,
+          distKm: distKm,
+          snr: `${snrVal > 0 ? '+' : ''}${snrVal} dB`,
+          rssi: `${rssiVal} dBm`,
+          hops: 0,
+          last: lastTime,
+          lat: lat,
+          lon: lon,
+          alt: data.Alt ? parseInt(data.Alt) : undefined
+        });
+
+        if (lat && lon) {
+          addMapMarker(call, lat, lon, distStr);
+        }
+
+        recordRssi(call, rssiVal, snrVal);
+      });
+    }
+
+    function parseMeshcomMessagesHtml(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const msgEls = doc.querySelectorAll(".message");
+      let hasNew = false;
+      msgEls.forEach(el => {
+        const isSelf = el.classList.contains("message-send");
+        const a = el.querySelector("a[href*='call=']");
+        if (!a) return;
+        const callsText = a.textContent.trim();
+        let dst = '*';
+        const parentP = a.parentElement;
+        if (parentP) {
+          const fullPText = parentP.textContent;
+          const matchDst = fullPText.match(/>([0-9a-zA-Z*_-]+)/);
+          if (matchDst) dst = matchDst[1];
+        }
+        const callParts = callsText.split(',').map(c => c.trim()).filter(Boolean);
+        const src = callParts[0] || 'MESH';
+        const via = callParts.slice(1);
+
+        const timeP = el.querySelector("p.font-small:nth-of-type(2)");
+        const timeStr = timeP ? timeP.textContent.trim() : '';
+
+        const textP = el.querySelector("p.font-normal");
+        const text = textP ? textP.textContent.trim() : '';
+
+        const key = `${src}|${dst}|${timeStr}|${text}`;
+        if (!seenWifiMsgKeys.has(key)) {
+          seenWifiMsgKeys.add(key);
+          hasNew = true;
+          liveMessages.push({
+            id: Date.now() + Math.random(),
+            src: src,
+            dst: dst,
+            via: via,
+            text: text,
+            time: timeStr.length > 8 ? timeStr.split(' ')[1] || timeStr : timeStr,
+            self: isSelf,
+            delivered: isSelf
+          });
+        }
+      });
+
+      if (hasNew) {
+        document.getElementById("cardMsgCount").innerHTML = `${liveMessages.length} <span class="stat-unit">msg live</span>`;
+        document.getElementById("badgeUnread").textContent = liveMessages.length;
+        renderMessages();
+        playChime();
+      }
+    }
+
+    function parseMeshcomRxLogHtml(html) {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const pEls = doc.querySelectorAll(".logoutput p, #content_inner.logoutput p, #content_inner p.no-wrap");
+      pEls.forEach(p => {
+        const t = p.textContent.trim();
+        if (t.includes(':') && !seenWifiLogLines.has(t)) {
+          seenWifiLogLines.add(t);
+          const colonIdx = t.indexOf(':');
+          const timePart = t.substring(0, colonIdx).replace(/<\d+>/, '').trim();
+          const payloadPart = t.substring(colonIdx + 1).trim();
+          addPacketLog('RX', `Wi-Fi Log ${timePart}`, payloadPart, '');
+          rxStatsTotal++;
+          updatePacketStats();
+        }
+      });
+    }
+
     async function pollWifiTelemetry() {
       if (!isNodeConnected || activeTransport !== 'wifi') return;
+      wifiPollerCount++;
+
       try {
-        const res = await fetch(`${wifiNodeIp}/json`, { signal: AbortSignal.timeout(2500) });
-        if (res.ok) {
-          const text = await res.text();
-          addPacketLog('JSON', 'Wi-Fi HTTP /json', text, '');
-          parseNodeJson(text);
+        // 1. Controlla messaggi (sempre, ogni poll ~3.5s)
+        const msgHtml = await meshcomFetch('/?getmessages');
+        if (msgHtml) parseMeshcomMessagesHtml(msgHtml);
+
+        // 2. Info generale (ogni 2 cicli, ~7s)
+        if (wifiPollerCount % 2 === 1) {
+          const infoHtml = await meshcomFetch('/?page=info');
+          if (infoHtml) parseMeshcomInfoHtml(infoHtml);
+        }
+
+        // 3. MHeard stazioni (ogni 2 cicli, ~7s)
+        if (wifiPollerCount % 2 === 0) {
+          const mhHtml = await meshcomFetch('/?page=mheard');
+          if (mhHtml) parseMeshcomMheardHtml(mhHtml);
+        }
+
+        // 4. Posizione GPS (ogni 4 cicli, ~14s)
+        if (wifiPollerCount % 4 === 1) {
+          const posHtml = await meshcomFetch('/?page=position');
+          if (posHtml) parseMeshcomPosHtml(posHtml);
+        }
+
+        // 5. Meteo WX (ogni 4 cicli, ~14s)
+        if (wifiPollerCount % 4 === 3) {
+          const wxHtml = await meshcomFetch('/?page=wx');
+          if (wxHtml) parseMeshcomWxHtml(wxHtml);
+        }
+
+        // 6. RX Log pacchetti (ogni 3 cicli, ~10s)
+        if (wifiPollerCount % 3 === 0) {
+          const rxHtml = await meshcomFetch('/?page=rxlog');
+          if (rxHtml) parseMeshcomRxLogHtml(rxHtml);
         }
       } catch (e) {
         // network jitter, ignore
@@ -4109,11 +4503,19 @@ HTML_CONTENT = """<!DOCTYPE html>
           .then(() => showToast(`Comando ${cmd} inviato!`))
           .catch(err => logBle(`[ERRORE BLE] ${err.message}`));
       } else if (activeTransport === 'wifi') {
-        fetch(`${wifiNodeIp}/command?action=${encodeURIComponent(cmd)}`, { method: 'POST', signal: AbortSignal.timeout(3000) })
-          .then(res => res.text())
+        let targetUrl = '';
+        if (cmd === '--reboot' || cmd === 'reboot') {
+          targetUrl = '/callfunction/?reboot=';
+        } else if (cmd === '--pos' || cmd === 'sendpos') {
+          targetUrl = '/callfunction/?sendpos=';
+        } else {
+          targetUrl = `/setparam/?manualcommand=${encodeURIComponent(cmd)}`;
+        }
+        meshcomFetch(targetUrl)
           .then(txt => {
-            logBle(`[NODO RISPOSTA WI-FI] ${txt}`);
+            logBle(`[NODO RISPOSTA WI-FI] Comando '${cmd}' inviato con successo.`);
             showToast(`Comando ${cmd} eseguito`);
+            setTimeout(pollWifiTelemetry, 800);
           })
           .catch(err => logBle(`[ERRORE WI-FI] ${err.message}`));
       }
@@ -4207,7 +4609,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 </html>
 """
 
-output_path = "/home/user/.gemini/antigravity/scratch/meshcom-dashboard/index.html"
+output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 with open(output_path, "w", encoding="utf-8") as f:
     f.write(HTML_CONTENT)
 
