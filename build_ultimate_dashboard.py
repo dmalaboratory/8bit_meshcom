@@ -1748,8 +1748,27 @@ HTML_CONTENT = """<!DOCTYPE html>
             <input type="number" step="0.005" class="form-control" id="cfgFreq" value="" placeholder="Es: 433.175 o 868.125">
           </div>
           <div class="form-group">
-            <label>Potenza di Trasmissione TX (dBm)</label>
-            <input type="number" min="2" max="22" class="form-control" id="cfgTxPower" value="20">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem">
+              <label style="margin:0; font-weight:600">Potenza TX LoRa (dBm)</label>
+              <span id="cfgTxPowerLabel" style="font-family:var(--font-mono); font-weight:700; color:var(--accent-cyan); font-size:0.85rem">22 dBm (158 mW)</span>
+            </div>
+            <input type="range" min="10" max="33" step="1" class="form-control" style="padding:0.2rem; cursor:pointer" id="cfgTxPower" value="22" oninput="updateTxPowerSlider(this.value)">
+            <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-dim); margin-top:0.25rem">
+              <span>10 dBm (10mW)</span>
+              <span>22 dBm (Std 160mW)</span>
+              <span style="color:#f59e0b">30 dBm (1W)</span>
+              <span style="color:#ef4444">33 dBm (2W Ebyte)</span>
+            </div>
+            <div style="display:flex; gap:0.35rem; margin-top:0.5rem; flex-wrap:wrap">
+              <button type="button" class="quick-chip" style="font-size:0.7rem; padding:0.2rem 0.45rem" onclick="setTxPowerPreset(14)">14 dBm (25mW)</button>
+              <button type="button" class="quick-chip" style="font-size:0.7rem; padding:0.2rem 0.45rem" onclick="setTxPowerPreset(20)">20 dBm (100mW)</button>
+              <button type="button" class="quick-chip" style="font-size:0.7rem; padding:0.2rem 0.45rem" onclick="setTxPowerPreset(22)">22 dBm (Std Max)</button>
+              <button type="button" class="quick-chip" style="font-size:0.7rem; padding:0.2rem 0.45rem; color:#f59e0b; border-color:rgba(245,158,11,0.5)" onclick="setTxPowerPreset(30)">⚡ 30 dBm (1 Watt)</button>
+              <button type="button" class="quick-chip" style="font-size:0.7rem; padding:0.2rem 0.45rem; color:#ef4444; border-color:rgba(239,68,68,0.5)" onclick="setTxPowerPreset(33)">🔥 33 dBm (2 Watt)</button>
+            </div>
+            <div id="txHighPowerWarning" style="display:none; margin-top:0.5rem; font-size:0.72rem; color:#f59e0b; background:rgba(245,158,11,0.08); padding:0.4rem 0.6rem; border-radius:6px; border:1px solid rgba(245,158,11,0.3)">
+              ⚠️ <strong>Avviso Modulo Alta Potenza:</strong> Valori superiori a 22 dBm sono dedicati a moduli con finale PA esterno (es. Ebyte E22-400M30S da 1W o M33S da 2W). Richiedono alimentazione adeguata (1.2A - 1.8A picco in TX) e antenna accordata per non danneggiare i finali.
+            </div>
           </div>
           <div class="form-group">
             <label>Spreading Factor (SF)</label>
@@ -2490,14 +2509,17 @@ HTML_CONTENT = """<!DOCTYPE html>
 
       if (nodeFrequency > 0) {
         document.getElementById("cardFreq").innerHTML = `${nodeFrequency.toFixed(3)} <span class="stat-unit">MHz</span>`;
-        document.getElementById("cardTxPower").textContent = `TX ${nodeTxPower} dBm`;
+        document.getElementById("cardTxPower").textContent = `TX ${nodeTxPower} dBm (${formatPowerWatts(nodeTxPower)})`;
         document.getElementById("cardModulation").textContent = `SF${nodeSf} CR${nodeCr} BW${nodeBandwidth}`;
 
         // Setup tab
         const cf = document.getElementById("cfgFreq");
         if (cf) cf.value = nodeFrequency.toFixed(3);
         const ctp = document.getElementById("cfgTxPower");
-        if (ctp) ctp.value = nodeTxPower;
+        if (ctp) {
+          ctp.value = nodeTxPower;
+          updateTxPowerSlider(nodeTxPower);
+        }
         const csf = document.getElementById("cfgSf");
         if (csf) csf.value = nodeSf;
 
@@ -2515,7 +2537,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
 
         const txEl = document.getElementById("rfTxPwrDisp");
-        if (txEl) txEl.textContent = `${nodeTxPower} dBm`;
+        if (txEl) txEl.textContent = `${nodeTxPower} dBm (${formatPowerWatts(nodeTxPower)})`;
         const bwEl = document.getElementById("rfBwDisp");
         if (bwEl) bwEl.textContent = `${nodeBandwidth} kHz`;
         const sfEl = document.getElementById("rfSfDisp");
@@ -4550,14 +4572,67 @@ HTML_CONTENT = """<!DOCTYPE html>
       setTimeout(() => execDirectCmd(`--sym ${sym}`), 800);
     }
 
+    function formatPowerWatts(dbm) {
+      const mw = Math.pow(10, dbm / 10);
+      if (mw >= 1000) {
+        return `${(mw / 1000).toFixed(1)} W`;
+      }
+      return `${Math.round(mw)} mW`;
+    }
+
+    function updateTxPowerSlider(val) {
+      const dbm = parseInt(val) || 22;
+      const label = document.getElementById("cfgTxPowerLabel");
+      const warn = document.getElementById("txHighPowerWarning");
+      if (label) {
+        label.textContent = `${dbm} dBm (${formatPowerWatts(dbm)})`;
+        if (dbm > 22) {
+          label.style.color = dbm >= 30 ? "#ef4444" : "#f59e0b";
+        } else {
+          label.style.color = "var(--accent-cyan)";
+        }
+      }
+      if (warn) {
+        warn.style.display = dbm > 22 ? "block" : "none";
+      }
+      const slider = document.getElementById("cfgTxPower");
+      if (slider && slider.value != dbm) {
+        slider.value = dbm;
+      }
+    }
+
+    function setTxPowerPreset(val) {
+      const slider = document.getElementById("cfgTxPower");
+      if (slider) {
+        slider.value = val;
+        updateTxPowerSlider(val);
+      }
+    }
+
     function saveRadioParams() {
       const freq = document.getElementById("cfgFreq").value;
       const txp = document.getElementById("cfgTxPower").value;
       const sf = document.getElementById("cfgSf").value;
       showToast("Salvataggio parametri radio...");
-      if (freq) execDirectCmd(`--freq ${freq}`);
-      if (txp) setTimeout(() => execDirectCmd(`--txpower ${txp}`), 400);
-      if (sf) setTimeout(() => execDirectCmd(`--sf ${sf}`), 800);
+
+      if (activeTransport === 'wifi') {
+        if (freq) execDirectCmd(`--freq ${freq}`);
+        if (txp) {
+          setTimeout(() => {
+            fetchNodeEndpoint(`/setparam/?txpower=${txp}`)
+              .then(() => {
+                showToast(`Potenza TX impostata a ${txp} dBm!`);
+                updateTxPowerSlider(txp);
+              })
+              .catch(() => execDirectCmd(`--txpower ${txp}`));
+          }, 400);
+        }
+        if (sf) setTimeout(() => execDirectCmd(`--sf ${sf}`), 800);
+      } else {
+        if (freq) execDirectCmd(`--freq ${freq}`);
+        if (txp) setTimeout(() => execDirectCmd(`--txpower ${txp}`), 400);
+        if (sf) setTimeout(() => execDirectCmd(`--sf ${sf}`), 800);
+      }
     }
 
     function toggleMeshParam(param, enabled) {
