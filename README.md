@@ -104,13 +104,41 @@ Apri quindi il browser su **`http://localhost:8080`**.
 
 ---
 
-## 🛠️ Hub Hardware, PCB Custom & Firmware MeshCom
+## 🛠️ Hardware & Progetti PCB (E22 DevBoard & Roadmap)
 
-Il progetto include le risorse complete per la realizzazione del nodo hardware dedicato:
-- **PCB KiCad & JLCPCB**: Schemi e gerbers per devboard compatibile ESP32 + modulo LoRa **Ebyte E22** (1W/2W), USB-C con resistori 5.1k CC, bus I2C per display OLED/sensori e regolatore LDO ad alta corrente.
-- **MeshCom Custom Firmware**: Build ottimizzate con WebGUI integrata compilata in gzip e flashing ESP32 (SPI Mode DOUT 40MHz per flash chip BY25Q32BS).
+Il repository include i sorgenti completi per la progettazione e la fabbricazione del nodo hardware ad alta potenza, situati nella cartella [`hardware/`](hardware/):
 
-Tutte le risorse di fabbricazione (BOM, CPL, Gerbers, Script di flashing) sono organizzate e documentate nella cartella di progetto locale.
+| Vista Assonometrica 3D | Layout Circuitale PCB |
+| :---: | :---: |
+| ![Render Assonometrico](hardware/Renders/render_isometric.png) | ![Render Top](hardware/Renders/render_top.png) |
+
+### 📌 Caratteristiche Hardware (Release Rev 1.0)
+- **Microcontrollore**: ESP32 DevKitC v4 (ESP32-WROOM-32 / D0WD-V3).
+- **Modulo LoRa High-Power**: Ebyte E22-400M30S (433 MHz, SX1268) / E22-900M30S (868/915 MHz, SX1262) con supporto trasmissione fino a **+30 / +33 dBm (1W / 2W)**.
+- **Porta USB-C Nativa**: Con resistori di terminazione **5.1 kΩ su CC1/CC2** per piena compatibilità con alimentatori USB-PD e cavi Type-C moderni.
+- **Alimentazione Robusta**: LDO 3.3V ad alta corrente (1.5A continui) dimensionato per sostenere i transienti di picco della trasmissione RF senza cadute di tensione o reset.
+- **Header Espansione I2C**: Pinout standard **`GND — VCC (3.3V) — SCL — SDA`** per display OLED SSD1306/SH1106 e sensori meteo BME280.
+
+### 📁 Risorse di Produzione Incluse nel Repository
+- **File di Progetto KiCad**: [`hardware/KiCad/`](hardware/KiCad/) (schema elettrico, netlist, sbroglio PCB).
+- **Pacchetto Pronto JLCPCB**: [`hardware/JLCPCB/`](hardware/JLCPCB/) contenente `gerbers.zip`, `bom.csv` e `cpl.csv` per produzione e montaggio SMD immediato.
+- **Guida Hardware Completa**: Consulta [`hardware/README.md`](hardware/README.md) per tutti i dettagli costruttivi.
+
+---
+
+### 🚀 Roadmap: Futuri Progetti Hardware & PCB
+
+1. **🌟 Rev 2.0 — "MeshCom Solar Repeater & High-Power Gateway"**:
+   - Upgrade a **ESP32-S3-WROOM-1** (Dual-Core LX7, USB nativo OTG/JTAG, memoria espansa 8MB/16MB).
+   - Ricevitore satellitare **GNSS/GPS integrato** (u-blox MAX-M10S / ATGM336H con antenna patch attiva) per beaconing APRS autonomo ad alta precisione.
+   - Circuito di carica e alimentazione solare avanzato con **BMS integrato** e supporto celle LiFePO4 (ideali per climi rigidi d'alta quota) o Li-Ion 18650/21700 con Power-Path continuo.
+   - Stadio di filtraggio RF passa-basso (LPF/SAW) per abbattimento spurie armoniche a 30/33 dBm in conformità alle normative radioamatoriali.
+   - Enclosure protetto IP67 con predisposizione per fissaggio a palo da esterno.
+
+2. **🌟 Rev 2.5 — "MeshCom Micro-Tracker Tattico Tascabile"**:
+   - Dispositivo compatto ultra-portatile a bassissimo assorbimento energetico.
+   - Display a inchiostro elettronico **e-Paper** leggibile sotto la luce diretta del sole o OLED compatto a filo scocca.
+   - Batteria integrata con autonomia multi-giornaliera e sensore ambientale Bosch BME680 (temperatura, umidità, pressione e qualità dell'aria).
 
 ---
 

@@ -1,0 +1,16 @@
+Comment,Designator,Footprint,LCSC Part #
+5.1k 1%,R1,R_0805_2012Metric,C27834
+5.1k 1%,R2,R_0805_2012Metric,C27834
+2.2k 1%,R3,R_0805_2012Metric,C17520
+2.2k 1%,R4,R_0805_2012Metric,C17520
+100nF 50V,C2,C_0805_2012Metric,C49678
+100nF 50V,C3,C_0805_2012Metric,C49678
+TYPE-C-31-M-12,J_USB,USB_C_Receptacle_HRO_TYPE-C-31-M-12,C165948
+470uF 16V,C1,CP_Radial_D6.3mm_P2.50mm,C331295
+SMA_EdgeMount,J_SMA,SMA_Amphenol_132289_EdgeMount,C494294
+1x19 Female Header,J_ESP_L,PinHeader_1x19_P2.54mm_Vertical,C225578
+1x19 Female Header,J_ESP_R,PinHeader_1x19_P2.54mm_Vertical,C225578
+1x04 Female Header,J_OLED,PinHeader_1x04_P2.54mm_Vertical,C224375
+1x04 Male Header,J_BME,PinHeader_1x04_P2.54mm_Vertical,C2897384
+1x06 Male Header,J_INA,PinHeader_1x06_P2.54mm_Vertical,C2897386
+E22-400M30S (DNP),U2,E22-400M30S,
