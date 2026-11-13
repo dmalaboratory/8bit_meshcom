@@ -23,6 +23,9 @@ Sostituisce e potenzia le interfacce standard offrendo una suite operativa compl
 ### 3. Connessione Dual-Mode: Bluetooth Low Energy + Wi-Fi / LAN REST
 ![Connessione Dual-Mode](screenshot_connection_dual.png)
 
+### 4. Controllo Potenza TX Dinamico (10-33 dBm) & Preset Amplificatore PA (Ebyte E22 1W/2W)
+![Slider Potenza TX e Preset](screenshot_setup_slider.png)
+
 ---
 
 ## ⚡ Caratteristiche Principali
@@ -40,24 +43,29 @@ Sostituisce e potenzia le interfacce standard offrendo una suite operativa compl
    - **Wi-Fi / Rete LAN**: Connessione diretta tramite IP locale a nodi fissi, gateway o SoftAP (default `192.168.4.1`) con polling delle API REST native.
    - Terminale integrato per comandi CLI diretti (`--info`, `--wx`, `--pos`, `--nodeset`, `--wifiset`, `--mheard`, `--batt`, `--help`).
 
-4. **💬 Chat & Gestione Canali**:
+4. **⚡ Regolazione Potenza RF Estesa (10 - 33 dBm)**:
+   - Slider di controllo fine per la potenza di trasmissione da 10 dBm fino a 33 dBm (2 Watt RF).
+   - Preset rapidi per moduli LoRa standard e ad alta potenza: **Standard (14-22 dBm)**, **Ebyte E22 1W (30 dBm)** ed **Ebyte E22 2W (33 dBm)**.
+   - Algoritmo di sicurezza che limita il pilotaggio del chip SX1262/SX1268 a 22 dBm per prevenire saturazione e danneggiamento dello stadio finale PA.
+
+5. **💬 Chat & Gestione Canali**:
    - Ricezione e trasmissione su canali LoRa Broadcast (`*`), Nazionali (`222` / `22251`), Emergenza (`999`) e messaggi diretti (DM).
    - **Zero caratteri corrotti**: Decodifica binaria nativa del protocollo APRS con rimozione dei byte di coda e gestione frame ACK (`0x41`) con conferme grafiche (`✓✓`).
 
-5. **📡 Analizzatore di Spettro RF SDR & Cascata (Waterfall)**:
+6. **📡 Analizzatore di Spettro RF SDR & Cascata (Waterfall)**:
    - Traccia FFT dinamica a 60 FPS con bagliore neon ciano e inviluppo ambra dei picchi (*Peak-Hold*) per visualizzare la sagoma del chirp LoRa (125 kHz BW).
    - Cascata SDR scorrevole con palette selezionabili (*Tactical SDR*, *Heatmap Termica*, *Fosfori Verdi*).
    - Metriche RF: lettura RSSI, **S-Meter radioamatoriale standard IARU**, margine SNR e Noise Floor.
    - Trend temporale degli ultimi 40 pacchetti e classifica nodi ordinata per intensità con tasto rapido `DM`.
 
-6. **🗺️ Mappa APRS Satellitare HD Offline**:
+7. **🗺️ Mappa APRS Satellitare HD Offline**:
    - Tracciamento stazioni e beacon GPS vettoriali in tempo reale.
    - Layer cartografici ad alta risoluzione **100% gratuiti e senza API key**: *Esri World Imagery (Satellite HD)*, *OpenStreetMap* e *OpenTopoMap*.
 
-7. **🌤️ Telemetria Sensori & Meteo WX**:
+8. **🌤️ Telemetria Sensori & Meteo WX**:
    - Monitoraggio sensori ambientali reali (temperatura, umidità, pressione barometrica, quota altimetrica) ed energetici (tensione e percentuale batteria).
 
-8. **🌐 Matrice Vicini (MeshCom 5)**:
+9. **🌐 Matrice Vicini (MeshCom 5)**:
    - Matrice dei nodi adiacenti con statistiche di qualità del collegamento radio (LQI).
 
 ---
@@ -93,6 +101,16 @@ Apri quindi il browser su **`http://localhost:8080`**.
 - **Android**: Google Chrome, Microsoft Edge, Samsung Internet.
 - **Linux**: Richiede Bluetooth attivo e BlueZ (in esecuzione di default su tutte le distribuzioni moderne).
 - **iOS (iPhone/iPad)**: Safari non supporta Web Bluetooth di default; utilizzare browser compatibili come **Bluefy** o **WebBLE**.
+
+---
+
+## 🛠️ Hub Hardware, PCB Custom & Firmware MeshCom
+
+Il progetto include le risorse complete per la realizzazione del nodo hardware dedicato:
+- **PCB KiCad & JLCPCB**: Schemi e gerbers per devboard compatibile ESP32 + modulo LoRa **Ebyte E22** (1W/2W), USB-C con resistori 5.1k CC, bus I2C per display OLED/sensori e regolatore LDO ad alta corrente.
+- **MeshCom Custom Firmware**: Build ottimizzate con WebGUI integrata compilata in gzip e flashing ESP32 (SPI Mode DOUT 40MHz per flash chip BY25Q32BS).
+
+Tutte le risorse di fabbricazione (BOM, CPL, Gerbers, Script di flashing) sono organizzate e documentate nella cartella di progetto locale.
 
 ---
 

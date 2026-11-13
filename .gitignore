@@ -3,13 +3,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Logs
+# Logs & reports
 *.log
+*.rpt
 
 # Helper build scripts
 apply_clean_universal_engine.py
 build_clean_system*.py
 update_spectrum_design.py
+
+# Downloaded binaries
+meshcom_fw/
 
 # OS generated files
 .DS_Store
