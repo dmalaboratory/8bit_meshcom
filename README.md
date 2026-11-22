@@ -217,41 +217,6 @@ python3 build_all_devices.py --list
 | **Ebyte DIY** | ESP32-S3 DevKitC-1 N16R8 | ESP32-S3 | SX1262/68 | 16MB Flash, 8MB PSRAM| ⏳ Script |
 | **LoRa-APRS** | Tracker Boards E22 / RA-01 | ESP32 | SX1268/78 | LoRa-APRS Dedicated | ⏳ Script |
 
----
-
-## 🗂️ Repository Structure
-
-```text
-8bit_meshcom/
-├── 8BitWave-MeshCom.apk          # 📱 Standalone Android companion app (1.2 MB)
-├── 8BitWave-MeshCom-FULL-0x0.bin # ⚡ Unified ESP32 E22 DevKitC flash image (0x0)
-├── firmware.bin                  # ⚡ Standard ESP32 E22 DevKitC application partition
-├── index.html                    # 💻 Tactical 8-Bit WebGUI (Satellite HD, SDR, Ham Suite)
-├── build_all_devices.py          # 🔨 Automated compiler for all 26+ hardware targets
-├── dev_server.py                 # 🧪 Local development server with mock telemetry
-├── assets/                       # 🖼️ High-resolution screenshots and 3D hardware renders
-│   ├── dashboard_hero_satellite_hd.png
-│   ├── hardware_pcb_v2_isometric.png
-│   ├── hardware_pcb_v2_top.png
-│   ├── dashboard_mesh3d_topology.png
-│   └── ham_satellite_tracker.png
-├── firmwares/                    # 📦 Precompiled binaries organized by brand
-│   ├── Ebyte_DIY/                # Images for DevKitC and 1W E22 modules
-│   │   └── E22-DevKitC/
-│   ├── Heltec/                   # Images for Heltec Automation modules
-│   │   └── heltec_wifi_lora_32_V3/
-│   └── LilyGO/                   # Images for LilyGO / TTGO devices
-│       └── ttgo_tbeam/
-├── hardware/                     # 🛠️ Complete Hardware Project (KiCad v8 & JLCPCB)
-│   ├── KiCad/                    # Schematic and PCB layout (.kicad_sch, .kicad_pcb)
-│   ├── JLCPCB/                   # Production Gerbers, BOM, and CPL files for SMT
-│   ├── Exports/                  # PDF schematics, DXF, and SVG vector exports
-│   ├── Renders/                  # Photorealistic 3D PCB render files
-│   └── README.md                 # Detailed hardware v2.0 specifications
-├── flash_official.sh             # 🚀 Quick bash flashing utility
-├── sync_to_esp32.sh              # 🔄 WebGUI to ESP32 firmware synchronization script
-└── README.md                     # 📖 This document
-```
 
 ---
 
