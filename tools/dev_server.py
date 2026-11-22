@@ -20,7 +20,7 @@ import socketserver
 import threading
 
 PORT = 8080
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX_FILE = os.path.join(BASE_DIR, "index.html")
 
 # Stato globale simulato del nodo MeshCom

@@ -57,8 +57,8 @@ All binaries are precompiled, verified, and ready to flash:
 | Package | Description | Target / File | File Size |
 | :--- | :--- | :--- | :--- |
 | 📱 **Android Companion App** | Native APK with instant AP & BLE scanner | [`8BitWave-MeshCom.apk`](8BitWave-MeshCom.apk) | `1.2 MB` |
-| ⚡ **ESP32 + Ebyte E22** | Unified Full Flash Image (`0x0`) | [`8BitWave-MeshCom-FULL-0x0.bin`](8BitWave-MeshCom-FULL-0x0.bin) | `2.9 MB` |
-| ⚡ **ESP32 + Ebyte E22** | Standard application firmware partition | [`firmware.bin`](firmware.bin) | `2.1 MB` |
+| ⚡ **ESP32 + Ebyte E22** | Unified Full Flash Image (`0x0`) | [`E22 DevKitC FULL-0x0.bin`](firmwares/Ebyte_DIY/E22-DevKitC/8BitWave-MeshCom-E22_DevKitC-FULL-0x0.bin) | `2.9 MB` |
+| ⚡ **ESP32 + Ebyte E22** | Standard application firmware partition | [`E22 DevKitC firmware.bin`](firmwares/Ebyte_DIY/E22-DevKitC/8BitWave-MeshCom-E22_DevKitC-firmware.bin) | `2.1 MB` |
 | 📟 **Heltec WiFi LoRa 32 V3** | Unified Full Flash Image (`0x0`) | [`Heltec V3 FULL-0x0.bin`](firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-FULL-0x0.bin) | `2.8 MB` |
 | 📟 **Heltec WiFi LoRa 32 V3** | Application firmware partition | [`Heltec V3 firmware.bin`](firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-firmware.bin) | `2.0 MB` |
 | 🧭 **LilyGO TTGO T-Beam** | Unified Full Flash Image (`0x0`) | [`T-Beam FULL-0x0.bin`](firmwares/LilyGO/ttgo_tbeam/8BitWave-MeshCom-ttgo_tbeam-FULL-0x0.bin) | `3.0 MB` |
@@ -163,7 +163,7 @@ No installation required. Compatible with Google Chrome and Microsoft Edge on Wi
 ```bash
 # Replace /dev/ttyUSB0 with your actual port (e.g. COM3 on Windows)
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 \
-    write_flash -fm dout 0x0 8BitWave-MeshCom-FULL-0x0.bin
+    write_flash -fm dout 0x0 firmwares/Ebyte_DIY/E22-DevKitC/8BitWave-MeshCom-E22_DevKitC-FULL-0x0.bin
 ```
 
 #### For ESP32-S3 (Heltec WiFi LoRa 32 V3 / T-Beam Supreme / T-Deck):
@@ -191,10 +191,10 @@ The native **`8BitWave-MeshCom.apk`** (1.2 MB) companion provides:
 All firmware images can be compiled and unified in a single command using the automated build script:
 ```bash
 # Compile and create unified 0x0 image for Heltec V3
-python3 build_all_devices.py --target heltec_wifi_lora_32_V3
+python3 tools/build_all_devices.py --target heltec_wifi_lora_32_V3
 
 # List all 26+ available hardware targets
-python3 build_all_devices.py --list
+python3 tools/build_all_devices.py --list
 ```
 
 ### Supported Boards Summary:
@@ -216,7 +216,6 @@ python3 build_all_devices.py --list
 | **Ebyte DIY** | ESP32 DevKitC + E22-900M30S | ESP32 | SX1262 1W | +30 dBm 868/915MHz | ⏳ Script |
 | **Ebyte DIY** | ESP32-S3 DevKitC-1 N16R8 | ESP32-S3 | SX1262/68 | 16MB Flash, 8MB PSRAM| ⏳ Script |
 | **LoRa-APRS** | Tracker Boards E22 / RA-01 | ESP32 | SX1268/78 | LoRa-APRS Dedicated | ⏳ Script |
-
 
 ---
 

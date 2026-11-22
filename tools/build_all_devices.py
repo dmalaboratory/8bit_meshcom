@@ -12,8 +12,10 @@ import shutil
 import json
 from pathlib import Path
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+OUTPUT_ROOT = str(REPO_ROOT / "firmwares")
 FIRMWARE_ROOT = "/home/user/MeshCom-Firmware"
-OUTPUT_ROOT = "/home/user/8bit_meshcom/firmwares"
 DOCS_SOFTWARE_ROOT = "/home/user/Documenti/mhcom/SOFTWARE/firmwares"
 
 DEVICES = {

@@ -16,11 +16,9 @@ if [ ! -f "$HTML_SRC" ]; then
     exit 1
 fi
 
-echo "1. 🔄 Sincronizzazione index.html e assets con Documenti e Android assets..."
+echo "1. 🔄 Sincronizzazione index.html con Documenti e Android assets..."
 cp "$HTML_SRC" "$DOCS_WEBGUI"
 cp "$HTML_SRC" "$ANDROID_ASSETS"
-cp "/home/user/8bit_meshcom/leaflet.js" "/home/user/8bitwave_android/app/src/main/assets/leaflet.js"
-cp "/home/user/8bit_meshcom/leaflet.css" "/home/user/8bitwave_android/app/src/main/assets/leaflet.css"
 
 echo "2. 🗜️ Compressione GZIP (livello 9) e generazione $HEADER_DST..."
 python3 - << 'EOF'
