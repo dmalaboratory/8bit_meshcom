@@ -3,18 +3,29 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Certificates and private keys
+*.pem
+*.key
+
 # Logs & reports
 *.log
 *.rpt
 
-# Helper build scripts
-apply_clean_universal_engine.py
-build_clean_system*.py
-update_spectrum_design.py
+# Temporary / Scratch scripts
+.assets_b64.py
+assets_b64.py
+auto_flash.py
+flash_when_ready.py
+patch_builder.py
+build_icon_dashboard.py
+ham_advanced_features.py
 
-# Downloaded binaries
+# Downloaded / temporary build caches
 meshcom_fw/
+.pio/
+.vscode/
 
 # OS generated files
 .DS_Store
 Thumbs.db
+
