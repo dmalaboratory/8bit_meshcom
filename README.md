@@ -1,6 +1,6 @@
 # 📡 8BitWave MeshCom v2.0
-### *Autonomous Tactical LoRa Ham Radio Node & Mobile Suite*
-**Designed and Developed by IU0TGU**
+### *Autonomous Tactical LoRa Ham Radio Node, Embedded WebGUI & Android Companion*
+**Designed and Engineered by IU0TGU**
 
 [![MeshCom](https://img.shields.io/badge/MeshCom-4.0%20Core-blue.svg)](https://icssw.org)
 [![Callsign](https://img.shields.io/badge/Callsign-IU0TGU-orange.svg)]()
@@ -11,203 +11,253 @@
 
 ---
 
-## ⚡ Panoramica del Progetto
+<p align="center">
+  <img src="assets/dashboard_hero_satellite_hd.png" alt="8BitWave MeshCom Tactical Dashboard" width="95%" />
+  <br />
+  <em>Tactical 8-Bit WebGUI running on embedded ESP32 flash with live High-Definition Hybrid Satellite Map and real-time MHeard nodes</em>
+</p>
 
-**8BitWave MeshCom v2.0** è una piattaforma completa per comunicazioni tattiche radioamatoriali off-grid e gateway **MeshCom 4.0**. Integra una **WebGUI retro-cyberpunk a 8-bit** responsive ospitata direttamente nella memoria flash dell'ESP32 (`http://192.168.4.1`), un'**applicazione Android nativa companion** (`8BitWave-MeshCom.apk`), una **suite di strumenti radioamatoriali avanzati** (SDR Waterfall, calcolo Fresnel 3D, RDF Direction Finding, tracciatore satelliti, tasto telegrafico CW) e il progetto hardware completo **PCB v2.0 Solar Repeater (1W/2W)** pronto per la produzione con JLCPCB.
+---
+
+## ⚡ Project Overview
+
+**8BitWave MeshCom v2.0** is an all-in-one open-source ecosystem for autonomous tactical communications, off-grid emergency operations, and amateur radio packet routing powered by the **MeshCom 4.0** protocol. 
+
+It provides:
+- A **retro-cyberpunk 8-bit tactical WebGUI** embedded directly inside the ESP32 internal flash memory (`http://192.168.4.1`), requiring zero external internet access or cloud dependencies.
+- A **lightweight standalone Android companion app** (`8BitWave-MeshCom.apk`, 1.2 MB) with instant Wi-Fi AP and Bluetooth LE auto-discovery.
+- An **advanced Ham Radio tactical suite**: Real-Time SDR RF Waterfall & Spectrogram, 3D Fresnel Zone Altitudinal Link Budget, Radio Direction Finding (RDF) Triangulation, Live Amateur Satellite Tracker (ISS, SO-50, AO-91) with Sky Polar Radar, Virtual CW Morse Keyer, and Dynamic 3D Mesh Topology.
+- The complete **Hardware DevBoard v2.0 (KiCad v8 + JLCPCB SMT ready)**: high-power solar repeater board with **FP6277 5.5A synchronous boost**, **CN3791 MPPT solar charger (6V–28V)**, hardware LiPo BMS, u-blox GNSS/GPS UART header with PPS interrupt, and Qwiic/STEMMA QT expansion.
 
 ```
                            ┌──────────────────────────┐
-                           │    🛰️ SATELLITI & APRS    │
-                           │     (ISS / SO-50 / LORa) │
+                           │   🛰️ SATELLITES & APRS   │
+                           │   (ISS / SO-50 / LoRa)   │
                            └─────────────┬────────────┘
                                          ▼
 ┌──────────────────────┐         ┌──────────────┐         ┌──────────────────────┐
-│  📱 App Android      │  BLE /  │  📡 NODO     │  LoRa   │  🌐 Rete MeshCom     │
-│  8BitWave-MeshCom    │◄───────►│  ESP32 / S3  │◄───────►│  Nodi & Gateway      │
-│  (1.2 MB Standalone) │  Wi-Fi  │  (Flash 0x0) │ 433/868 │  Ripetitori Nazionali│
+│  📱 Android App      │  BLE /  │  📡 NODE     │  LoRa   │  🌐 MeshCom Network  │
+│  8BitWave-MeshCom    │◄───────►│  ESP32 / S3  │◄───────►│  Nodes & Gateways    │
+│  (1.2 MB Standalone) │  Wi-Fi  │  (Flash 0x0) │ 433/868 │  National Repeaters  │
 └──────────────────────┘         └──────┬───────┘         └──────────────────────┘
                                         │
                          ┌──────────────┴──────────────┐
-                         │  💻 WebGUI Tattica 8-Bit    │
-                         │  Mappa Satellite HD Hybrid  │
+                         │  💻 8-Bit Tactical WebGUI   │
+                         │  Satellite HD Hybrid Map    │
                          │  SDR Waterfall & RF Tools   │
                          └─────────────────────────────┘
 ```
 
 ---
 
-## 📥 Download Rapidi (Binari & Pacchetti)
+## 📥 Direct Downloads & Release Binaries
 
-Tutti i file sono pronti all'uso, compilati e collaudati:
+All binaries are precompiled, verified, and ready to flash:
 
-| Pacchetto | Descrizione | File / Download | Dimensione |
+| Package | Description | Target / File | File Size |
 | :--- | :--- | :--- | :--- |
-| 📱 **App Android** | Applicazione companion con scansione AP & BLE | [`8BitWave-MeshCom.apk`](8BitWave-MeshCom.apk) | `1.2 MB` |
-| ⚡ **ESP32 + Ebyte E22** | Immagine FULL Unificata pronta al flash (`0x0`) | [`8BitWave-MeshCom-FULL-0x0.bin`](8BitWave-MeshCom-FULL-0x0.bin) | `2.9 MB` |
-| ⚡ **ESP32 + Ebyte E22** | Partizione applicativa firmware standard | [`firmware.bin`](firmware.bin) | `2.1 MB` |
-| 📟 **Heltec WiFi LoRa 32 V3** | Immagine FULL Unificata pronta al flash (`0x0`) | [`Heltec V3 FULL-0x0.bin`](firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-FULL-0x0.bin) | `2.8 MB` |
-| 📟 **Heltec WiFi LoRa 32 V3** | Partizione applicativa firmware Heltec V3 | [`Heltec V3 firmware.bin`](firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-firmware.bin) | `2.0 MB` |
-| 🧭 **LilyGO TTGO T-Beam** | Immagine FULL Unificata pronta al flash (`0x0`) | [`T-Beam FULL-0x0.bin`](firmwares/LilyGO/ttgo_tbeam/8BitWave-MeshCom-ttgo_tbeam-FULL-0x0.bin) | `3.0 MB` |
-| 🧭 **LilyGO TTGO T-Beam** | Partizione applicativa firmware T-Beam | [`T-Beam firmware.bin`](firmwares/LilyGO/ttgo_tbeam/8BitWave-MeshCom-ttgo_tbeam-firmware.bin) | `2.2 MB` |
-| 🛠️ **Hardware KiCad v8** | Progetto completo Schemi + PCB DevBoard v2.0 | [`meshcom-e22-kicad-v2.0.zip`](hardware/KiCad/meshcom-e22-kicad-project-v2.0.zip) | `4.2 MB` |
-| 🏭 **JLCPCB SMT Package** | Gerber, Distinta componenti BOM e CPL assemblaggio | [`hardware/JLCPCB/`](hardware/JLCPCB/) | `Cartella` |
+| 📱 **Android Companion App** | Native APK with instant AP & BLE scanner | [`8BitWave-MeshCom.apk`](8BitWave-MeshCom.apk) | `1.2 MB` |
+| ⚡ **ESP32 + Ebyte E22** | Unified Full Flash Image (`0x0`) | [`8BitWave-MeshCom-FULL-0x0.bin`](8BitWave-MeshCom-FULL-0x0.bin) | `2.9 MB` |
+| ⚡ **ESP32 + Ebyte E22** | Standard application firmware partition | [`firmware.bin`](firmware.bin) | `2.1 MB` |
+| 📟 **Heltec WiFi LoRa 32 V3** | Unified Full Flash Image (`0x0`) | [`Heltec V3 FULL-0x0.bin`](firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-FULL-0x0.bin) | `2.8 MB` |
+| 📟 **Heltec WiFi LoRa 32 V3** | Application firmware partition | [`Heltec V3 firmware.bin`](firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-firmware.bin) | `2.0 MB` |
+| 🧭 **LilyGO TTGO T-Beam** | Unified Full Flash Image (`0x0`) | [`T-Beam FULL-0x0.bin`](firmwares/LilyGO/ttgo_tbeam/8BitWave-MeshCom-ttgo_tbeam-FULL-0x0.bin) | `3.0 MB` |
+| 🧭 **LilyGO TTGO T-Beam** | Application firmware partition | [`T-Beam firmware.bin`](firmwares/LilyGO/ttgo_tbeam/8BitWave-MeshCom-ttgo_tbeam-firmware.bin) | `2.2 MB` |
+| 🛠️ **Hardware KiCad v8** | Complete Schematic + PCB DevBoard project | [`meshcom-e22-kicad-v2.0.zip`](hardware/KiCad/meshcom-e22-kicad-project-v2.0.zip) | `4.2 MB` |
+| 🏭 **JLCPCB SMT Package** | Production Gerbers, BOM, and CPL files | [`hardware/JLCPCB/`](hardware/JLCPCB/) | `Folder` |
 
 ---
 
-## ✨ Funzionalità Esclusive
+## ✨ Key Tactical Features
 
-### 🗺️ Mappa Satellite HD Ibrida (Zero API Keys)
-- Layer predefinito ad alta risoluzione: **Esri World Imagery** combinato con **Esri World Boundaries and Places**.
-- Nessuna chiave API richiesta: funziona immediatamente e gratuitamente.
-- Mostra in tempo reale tutti i nodi ascoltati (`MHeard`), con icone dedicate, popup telemetrici (tensione batteria, altitudine, RSSI/SNR) e tracciamento rotte APRS.
+### 🗺️ High-Definition Hybrid Satellite Map (Zero API Keys)
+- **Default High-Res Imagery**: Powered by **Esri World Imagery** seamlessly layered with **Esri Boundaries and Places** vector tiles.
+- **No API Keys or Accounts**: Works instantly out of the box.
+- **Tactical Node Overlays**: Live markers for all received stations (`MHeard`), telemetry popups (battery voltage, altitude, RSSI/SNR, distance, last heard), and APRS trail tracking.
 
-### 💬 Chat Tattica & Gruppi Personalizzati Illimitati
-- Canali predefiniti: `TUTTI (Broadcast)`, `EMERGENZA 112`, `ITALIA HAM`, `DX LORa`.
-- **Nuovo Gestore Gruppi Personalizzati**: creazione immediata con ID esadecimale (00-FF), etichetta personalizzata, colore badge dedicato e possibilità di rimozione.
-- Trasmissione immediata ai nodi nel raggio e routing mesh automatico.
+### 💬 Tactical Messaging & Unlimited Custom Groups
+- **Standard Channels**: `ALL (Broadcast)`, `EMERGENCY 112`, `ITALIA HAM`, `DX LoRa`.
+- **Custom Dynamic Channel Manager**: Create unlimited private/tactical channels with custom hex IDs (`00`–`FF`), personalized labels, and dedicated color badges. Instant channel switching and one-click deletion.
+- **Auto-Mesh Routing**: Packets automatically routed across multi-hop peer nodes.
 
-### 📶 SDR Waterfall & Spettrogramma RF Live
-- Monitor spettrale grafico in tempo reale del traffico RF sulla frequenza di canale (433.175 MHz / 868 MHz).
-- Spettrogramma a cascata (Waterfall) dinamico a colori termici, calcolo FFT a 64 bin, Noise Floor, RSSI istantaneo e visualizzazione Bit Error Rate.
+### 📶 Real-Time SDR RF Waterfall & Spectrogram
+- Live interactive RF spectrum monitor on operating frequency (433.175 MHz / 868 MHz).
+- Thermal waterfall spectrogram, 64-bin FFT spectrum analyzer, dynamic noise floor estimation, instantaneous RSSI, and bit error rate visualization.
 
-### 🧮 Suite Strumenti Radioamatoriali (by IU0TGU)
-1. **Calcolo Ellissoide di Fresnel 3D & Link Budget**:
-   - Tracciamento visivo del 1° e 2° ellissoide di Fresnel su canvas interattivo.
-   - Calcolo istantaneo del raggio massimo della prima zona $R_1$, Free Space Path Loss (FSPL) in dB e stima del Fade Margin in base a guadagno antenne e potenza di trasmissione.
-2. **Radio Direction Finding (RDF) & Triangolazione**:
-   - Inserimento stazioni di ascolto con coordinate geografiche e azimuth stimato.
-   - Diagramma polare interattivo e calcolo geometrico del punto di convergenza/intersezione con marker proiettato direttamente sulla mappa.
-3. **Tracciatore Satelliti Radioamatoriali**:
-   - Radar azimutale/elevazione (Sky Polar Chart) e mappa di ground track orbitale per satelliti FM/APRS (ISS ZARYA, SO-50, AO-91).
-   - Predizione passaggi, elevazione massima (AOS/LOS/MEL) e calcolo del Doppler shift su downlink LoRa/VHF.
-4. **Tasto Telegrafico CW Virtuale**:
-   - Oscillatore audio integrato con generatore di tono continuo (Web Audio API).
-   - Velocità regolabile da 10 a 35 WPM, frequenza sidetone regolabile da 400 a 1000 Hz, traduttore bidirezionale Testo ↔ Codice Morse.
-5. **Topologia Mesh 3D Dinamica**:
-   - Grafico interattivo a forze di tutti i nodi e collegamenti della rete, con colorazione dinamica in base all'SNR e numero di salti (hop count).
+<p align="center">
+  <img src="assets/dashboard_mesh3d_topology.png" alt="3D Mesh Topology Network" width="48%" />
+  <img src="assets/ham_satellite_tracker.png" alt="Amateur Satellite Sky Radar" width="48%" />
+  <br />
+  <em>Left: Live 3D Mesh Topology with dynamic physics links. Right: Amateur Satellite Tracker with Polar Sky Radar & Doppler prediction</em>
+</p>
 
-### 📱 100% Mobile Responsive
-- Interfaccia progettata per smartphone e tablet da 320px a 4K.
-- Tabelle telemetriche e MHeard con scrolling fluido touch senza alcun overflow orizzontale.
-- Cassetto di navigazione a scomparsa laterale con accesso istantaneo a tutti i menu tattici.
+### 🧮 Ham Radio Tactical Suite (by IU0TGU)
+1. **3D Fresnel Zone & RF Link Budget Calculator**:
+   - Visual calculation of the 1st and 2nd Fresnel clearance zone ($R_1$) over an interactive altitudinal terrain model.
+   - Computes Free Space Path Loss (FSPL in dB), antenna system gains, and fade margin for robust long-range links.
+2. **Radio Direction Finding (RDF) & Triangulation**:
+   - Enter multiple listening stations with geographic coordinates and received bearings.
+   - Interactive polar chart calculates the geometric intersection and projects the estimated signal emitter coordinates directly onto the live satellite map.
+3. **Amateur Satellite Tracker & Sky Radar**:
+   - Real-time SGP4 orbital propagation for amateur radio satellites (ISS ZARYA, SO-50, AO-91).
+   - Polar azimuth/elevation sky radar, global ground track map, upcoming pass predictions (AOS, LOS, MEL), and downlink Doppler shift calculator.
+4. **Virtual CW Morse Code Keyer**:
+   - Built-in Web Audio API tone generator with continuous sidetone oscillator.
+   - Adjustable speed (10 to 35 WPM), pitch frequency control (400 to 1000 Hz), and bidirectional Text ↔ Morse code translator.
+5. **Dynamic 3D Mesh Topology Canvas**:
+   - Real-time force-directed 3D particle graph of all mesh nodes and active RF links, colored dynamically by SNR and hop distance.
+
+### 📱 100% Mobile Responsive Design
+- Optimized for screens from **320px smartphones to 4K ultra-wide displays**.
+- Touch-friendly telemetry and MHeard tables with smooth horizontal swipe and zero viewport clipping.
+- Collapsible sidebar drawer with quick tactical access.
 
 ---
 
-## ⚡ Guida Rapida al Flashing
+## 🛠️ Hardware DevBoard v2.0 (High-Power Solar Repeater)
 
-### Metodo 1: Web Flasher da Browser (Consigliato)
-Nessuna installazione richiesta, compatibile con Google Chrome e Microsoft Edge:
-1. Collega la scheda via cavo USB al PC.
-2. Apri il Web Flasher ufficiale: **[https://esptool.oevsv.at/](https://esptool.oevsv.at/)**
-3. Clicca su **Connect** e seleziona la porta seriale USB.
-4. Scegli il file unificato **`FULL-0x0.bin`** (offset `0x0000`).
-5. Clicca su **Program** e attendi il completamento.
+<p align="center">
+  <img src="assets/hardware_pcb_v2_isometric.png" alt="Hardware v2.0 3D Isometric View" width="55%" />
+  <img src="assets/hardware_pcb_v2_top.png" alt="Hardware v2.0 Top View" width="40%" />
+  <br />
+  <em>MeshCom E22 DevBoard v2.0 — KiCad v8 3D Photorealistic Renders (100.0 mm × 80.0 mm JLCPCB 2-Layer Standard)</em>
+</p>
 
-### Metodo 2: Riga di Comando con `esptool.py`
+Designed for unattended mountaintop solar repeaters, mobile emergency field gateways, and high-power base stations:
 
-#### Per ESP32 Classico (Ebyte E22 DevKitC / T-Beam V1.1 / LoRa32):
+1. **FP6277 Synchronous Boost Converter (5.5A Switch, 5V / 2.5A Continuous)**:
+   - Ultra-high efficiency (>93%) synchronous architecture replacing legacy noisy converters.
+   - Engineered to handle pulse RF power transients of **+30 dBm (1 Watt)** and **+33 dBm (2 Watts)** with peak supply currents up to 1.8A @ 5V without voltage sags.
+2. **CN3791 MPPT Solar Charger (6V to 28V Input)**:
+   - Onboard Maximum Power Point Tracking buck charger with screw terminal (**J_SOLAR**), status LEDs (`LED_CHG` Red / `LED_DONE` Green).
+3. **Zero-Glitch Power-Path Management**:
+   - Automatic hardware switching between solar/USB-C and 1S LiPo battery via P-MOSFET **AO3401A** and Schottky diode **SS34**.
+4. **Hardware 1S LiPo BMS Protection**:
+   - Dedicated protection IC **DW01A** with dual power N-MOSFETs **FS8205A** (over-discharge cutoff at 2.4V, short-circuit protection threshold at 6.0A).
+5. **Precision Battery ADC Telemetry**:
+   - 100 kΩ / 100 kΩ 1% resistive voltage divider with 100 nF noise filter on **GPIO 35** (`BATT_SENSE`).
+6. **Hardware GNSS / GPS UART2 Interface**:
+   - 5-pin header for u-blox NEO-6M / NEO-8M / Quectel GPS modules with dedicated hardware PPS (Pulse Per Second) line wired to interrupt **GPIO 4**.
+7. **Modular Sensor Expansion**:
+   - **STEMMA QT / Qwiic** 4-pin 1.0mm JST-SH connector for plug-and-play I2C sensors.
+   - Dedicated 3-pin connector with 4.7 kΩ pull-up for Dallas **DS18B20** 1-Wire temperature probes on **GPIO 25**.
+   - Standard headers for SSD1306 OLED, BME280 barometric sensor, and INA219 current/voltage sensor.
+
+Detailed hardware design documentation, bill of materials, and KiCad schematics are available in [`hardware/README.md`](hardware/README.md).
+
+---
+
+## ⚡ Fast Flashing Guide
+
+### Method 1: In-Browser Web Flasher (Recommended)
+No installation required. Compatible with Google Chrome and Microsoft Edge on Windows, Linux, and macOS:
+1. Connect your ESP32 board to your PC via USB cable.
+2. Open the official Austrian Amateur Radio Web Flasher: **[https://esptool.oevsv.at/](https://esptool.oevsv.at/)**
+3. Click **Connect** and select your USB COM/TTY serial port.
+4. Select the unified **`FULL-0x0.bin`** file for your device at offset **`0x0000`**.
+5. Click **Program** and wait for the flash process to complete.
+
+### Method 2: Command Line using `esptool.py`
+
+#### For Classic ESP32 (Ebyte E22 DevKitC / TTGO T-Beam / LoRa32):
 ```bash
-# Sostituisci /dev/ttyUSB0 con la tua porta (es. COM3 su Windows)
+# Replace /dev/ttyUSB0 with your actual port (e.g. COM3 on Windows)
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 \
     write_flash -fm dout 0x0 8BitWave-MeshCom-FULL-0x0.bin
 ```
 
-#### Per ESP32-S3 (Heltec WiFi LoRa 32 V3 / T-Beam Supreme / T-Deck):
+#### For ESP32-S3 (Heltec WiFi LoRa 32 V3 / T-Beam Supreme / T-Deck):
 ```bash
 esptool.py --chip esp32s3 --port /dev/ttyACM0 --baud 921600 \
     write_flash 0x0 firmwares/Heltec/heltec_wifi_lora_32_V3/8BitWave-MeshCom-heltec_wifi_lora_32_V3-FULL-0x0.bin
 ```
 
 > [!TIP]
-> Se durante la connessione compaiono puntini continui (`Connecting......`), tieni premuto il tasto **BOOT** (GPIO 0) sulla scheda finché non inizia la scrittura, poi rilascialo.
+> If `esptool` prints recurring dots (`Connecting......`), hold down the **BOOT** button (GPIO 0) on the board until flashing starts, then release it.
 
 ---
 
-## 📱 App Android Companion
+## 📱 Android Companion App
 
-L'applicazione nativa **`8BitWave-MeshCom.apk`** (1.2 MB) offre:
-- **Schermata di Avvio Pulita**: Connessione istantanea in un tocco al nodo via **Wi-Fi AP (`192.168.4.1`)** o **Rete Locale LAN (`192.168.1.x`)**.
-- **Scansione Bluetooth LE**: Accoppiamento diretto con i nodi MeshCom dotati di BLE.
-- **Visualizzazione Ottimizzata**: WebView accelerata con rendering nativo, perfetta visualizzazione di mappe e grafici spettrometrici verticali.
+The native **`8BitWave-MeshCom.apk`** (1.2 MB) companion provides:
+- **Instant Gateway Screen**: One-tap selection between **Node Hotspot (`192.168.4.1`)** and **Local Wi-Fi Network (`192.168.1.x`)**.
+- **Bluetooth LE Auto-Discovery**: Direct pairing with MeshCom BLE-enabled nodes.
+- **Hardware-Accelerated Mobile View**: Ultra-fast touch rendering of satellite maps, 3D topology canvas, and SDR spectrum graphs.
 
 ---
 
-## 📋 Matrice di Compatibilità Hardware
+## 📋 Hardware Compatibility Matrix
 
-Tutte le immagini firmware possono essere compilate in un comando con lo script incluso:
+All firmware images can be compiled and unified in a single command using the automated build script:
 ```bash
-# Esempio: compila e unifica l'immagine per Heltec V3
+# Compile and create unified 0x0 image for Heltec V3
 python3 build_all_devices.py --target heltec_wifi_lora_32_V3
 
-# Visualizza tutti i 26+ target disponibili
+# List all 26+ available hardware targets
 python3 build_all_devices.py --list
 ```
 
-### Sintesi Dispositivi Supportati:
+### Supported Boards Summary:
 
-| Produttore | Modello Dispositivo | MCU | Chip LoRa | Display / Note | Binario Pronto |
+| Manufacturer | Hardware Model | MCU Architecture | LoRa Transceiver | Display / Features | Ready Binary |
 | :--- | :--- | :--- | :--- | :--- | :---: |
-| **Heltec** | WiFi LoRa 32 V3 / V3.2 | ESP32-S3 | SX1262 | OLED 0.96" | ✅ Incluso |
-| **Heltec** | WiFi LoRa 32 V4 | ESP32-S3 | SX1262 | OLED 0.96", PMU | ⏳ Script |
-| **Heltec** | WiFi LoRa 32 V2 | ESP32 | SX1276/78 | OLED 0.96" | ⏳ Script |
-| **Heltec** | Wireless Stick V3 | ESP32-S3 | SX1262 | Mini OLED 0.49" | ⏳ Script |
-| **Heltec** | Wireless Tracker | ESP32-S3 | SX1262 | TFT Colori + GPS | ⏳ Script |
-| **Heltec** | Wireless Paper / Vision Master | ESP32-S3 | SX1262 | E-Paper 2.13"/2.9" | ⏳ Script |
-| **LilyGO** | TTGO T-Beam V1.1 / V1.2 | ESP32 | SX1276/78 | GPS + 18650 | ✅ Incluso |
-| **LilyGO** | TTGO T-Beam SX1262 / SX1268 | ESP32 | SX1262/68 | GPS + 18650 | ⏳ Script |
+| **Heltec** | WiFi LoRa 32 V3 / V3.2 | ESP32-S3 | SX1262 | 0.96" OLED | ✅ Included |
+| **Heltec** | WiFi LoRa 32 V4 | ESP32-S3 | SX1262 | 0.96" OLED, PMU | ⏳ Script |
+| **Heltec** | WiFi LoRa 32 V2 | ESP32 | SX1276/78 | 0.96" OLED | ⏳ Script |
+| **Heltec** | Wireless Stick V3 | ESP32-S3 | SX1262 | 0.49" Micro OLED | ⏳ Script |
+| **Heltec** | Wireless Tracker | ESP32-S3 | SX1262 | Color TFT + GPS | ⏳ Script |
+| **Heltec** | Wireless Paper / Vision Master | ESP32-S3 | SX1262 | 2.13"/2.9" E-Paper | ⏳ Script |
+| **LilyGO** | TTGO T-Beam V1.1 / V1.2 | ESP32 | SX1276/78 | GPS + 18650 Battery | ✅ Included |
+| **LilyGO** | TTGO T-Beam SX1262 / SX1268 | ESP32 | SX1262/68 | GPS + 18650 Battery | ⏳ Script |
 | **LilyGO** | T-Beam Supreme / 1W | ESP32-S3 | SX1262 1W | Quectel L76K + PMU | ⏳ Script |
-| **LilyGO** | T-Deck / Plus / Pro | ESP32-S3 | SX1262 | Tastiera QWERTY, IPS | ⏳ Script |
-| **LilyGO** | T-ETH-Elite 1262 | ESP32-S3 | SX1262 | Porta Ethernet RJ45 | ⏳ Script |
-| **Ebyte DIY** | ESP32 DevKitC + E22-400M30S | ESP32 | SX1268 1W | +30 dBm (1.000 mW) | ✅ Incluso |
+| **LilyGO** | T-Deck / Plus / Pro | ESP32-S3 | SX1262 | QWERTY Keyboard, IPS | ⏳ Script |
+| **LilyGO** | T-ETH-Elite 1262 | ESP32-S3 | SX1262 | RJ45 Ethernet Gateway| ⏳ Script |
+| **Ebyte DIY** | ESP32 DevKitC + E22-400M30S | ESP32 | SX1268 1W | +30 dBm (1.000 mW) | ✅ Included |
 | **Ebyte DIY** | ESP32 DevKitC + E22-900M30S | ESP32 | SX1262 1W | +30 dBm 868/915MHz | ⏳ Script |
 | **Ebyte DIY** | ESP32-S3 DevKitC-1 N16R8 | ESP32-S3 | SX1262/68 | 16MB Flash, 8MB PSRAM| ⏳ Script |
-| **LoRa-APRS** | Schede Tracker E22 / RA-01 | ESP32 | SX1268/78 | Dedicato LoRa-APRS | ⏳ Script |
+| **LoRa-APRS** | Tracker Boards E22 / RA-01 | ESP32 | SX1268/78 | LoRa-APRS Dedicated | ⏳ Script |
 
 ---
 
-## 🛠️ Scheda Hardware v2.0 (KiCad & JLCPCB)
+## 🗂️ Repository Structure
 
-Nella directory [`hardware/`](hardware/) è disponibile il progetto completo per la realizzazione della devboard ad alta potenza per ripetitori solari:
-
-- **Dimensioni standard**: 100.0 mm × 80.0 mm (budget tier JLCPCB 2-layer).
-- **Stadio di Potenza Boost FP6277**: Convertitore sincrono 5.5A switch, 5V / 2.5A continui, dimensionato per picchi RF a piena potenza (+30 dBm / +33 dBm).
-- **Inseguitore Solare MPPT CN3791**: Per pannelli fotovoltaici 6V - 28V con LED di stato CHG e DONE.
-- **Protezione BMS LiPo 1S**: Chip DW01A + doppio MOSFET FS8205A (cutoff sovrascarica 2.4V, soglia cortocircuito 6A).
-- **Interfaccia GNSS / GPS UART**: Header dedicato per moduli u-blox NEO-6M/8M con linea PPS su interrupt.
-- **Espansione Sensori**: Connettore STEMMA QT / Qwiic (I2C), morsetto DS18B20 1-Wire, header I2C per OLED, BME280 e voltmetro/amperometro INA219.
-
----
-
-## 🗂️ Struttura della Repository
-
-```
+```text
 8bit_meshcom/
-├── 8BitWave-MeshCom.apk         # 📱 App Android nativa standalone (1.2 MB)
-├── 8BitWave-MeshCom-FULL-0x0.bin# ⚡ Immagine firmware unificata ESP32 E22 DevKitC (0x0)
-├── firmware.bin                 # ⚡ Partizione applicazione standard ESP32 E22 DevKitC
-├── index.html                   # 💻 Tactical WebGUI 8-Bit (Satellite HD, SDR, Ham Tools)
-├── build_all_devices.py         # 🔨 Script compilatore per tutti i 26+ target hardware
-├── dev_server.py                # 🧪 Server di sviluppo locale con telemetria simulata
-├── firmwares/                   # 📦 Archivio firmware organizzato per produttore
-│   ├── Ebyte_DIY/               # Immagini per DevKitC e moduli E22 1W
+├── 8BitWave-MeshCom.apk          # 📱 Standalone Android companion app (1.2 MB)
+├── 8BitWave-MeshCom-FULL-0x0.bin # ⚡ Unified ESP32 E22 DevKitC flash image (0x0)
+├── firmware.bin                  # ⚡ Standard ESP32 E22 DevKitC application partition
+├── index.html                    # 💻 Tactical 8-Bit WebGUI (Satellite HD, SDR, Ham Suite)
+├── build_all_devices.py          # 🔨 Automated compiler for all 26+ hardware targets
+├── dev_server.py                 # 🧪 Local development server with mock telemetry
+├── assets/                       # 🖼️ High-resolution screenshots and 3D hardware renders
+│   ├── dashboard_hero_satellite_hd.png
+│   ├── hardware_pcb_v2_isometric.png
+│   ├── hardware_pcb_v2_top.png
+│   ├── dashboard_mesh3d_topology.png
+│   └── ham_satellite_tracker.png
+├── firmwares/                    # 📦 Precompiled binaries organized by brand
+│   ├── Ebyte_DIY/                # Images for DevKitC and 1W E22 modules
 │   │   └── E22-DevKitC/
-│   └── Heltec/                  # Immagini per moduli Heltec Automation
-│       └── heltec_wifi_lora_32_V3/
-├── hardware/                    # 🛠️ Progetto Hardware KiCad v8 & JLCPCB
-│   ├── KiCad/                   # Schemi elettrici e PCB layout (.kicad_sch, .kicad_pcb)
-│   ├── JLCPCB/                  # Gerber, distinta base (BOM) e coordinate CPL per SMT
-│   ├── Exports/                 # Esportazioni PDF, DXF e 3D STEP
-│   └── README.md                # Documentazione dettagliata hardware v2.0
-├── flash_official.sh            # 🚀 Script bash di flashing rapido
-├── sync_to_esp32.sh             # 🔄 Script di sincronizzazione WebGUI -> Firmware
-└── README.md                    # 📖 Questo documento
+│   ├── Heltec/                   # Images for Heltec Automation modules
+│   │   └── heltec_wifi_lora_32_V3/
+│   └── LilyGO/                   # Images for LilyGO / TTGO devices
+│       └── ttgo_tbeam/
+├── hardware/                     # 🛠️ Complete Hardware Project (KiCad v8 & JLCPCB)
+│   ├── KiCad/                    # Schematic and PCB layout (.kicad_sch, .kicad_pcb)
+│   ├── JLCPCB/                   # Production Gerbers, BOM, and CPL files for SMT
+│   ├── Exports/                  # PDF schematics, DXF, and SVG vector exports
+│   ├── Renders/                  # Photorealistic 3D PCB render files
+│   └── README.md                 # Detailed hardware v2.0 specifications
+├── flash_official.sh             # 🚀 Quick bash flashing utility
+├── sync_to_esp32.sh              # 🔄 WebGUI to ESP32 firmware synchronization script
+└── README.md                     # 📖 This document
 ```
 
 ---
 
-## 👥 Autore & Riconoscimenti
+## 👥 Author & Acknowledgments
 
-- **Sviluppo & Architettura**: **IU0TGU** (8BitWave Project)
-- **Protocollo & Firmware Base**: Basato su **MeshCom 4.0** del team **ÖVSV / ICSSW** ([icssw.org](https://icssw.org) / [esptool.oevsv.at](https://esptool.oevsv.at))
-- **Mappe**: Esri ArcGIS Living Atlas (World Imagery & Boundaries)
-- **Licenza**: Distribuito sotto licenza open-source GNU GPL-3.0.
+- **Lead Architecture & Development**: **IU0TGU** (8BitWave Project)
+- **Protocol & Base Firmware**: Built upon **MeshCom 4.0** by the **ÖVSV / ICSSW** team ([icssw.org](https://icssw.org) / [esptool.oevsv.at](https://esptool.oevsv.at))
+- **Satellite Map Imagery**: Esri ArcGIS Living Atlas (World Imagery & World Boundaries and Places)
+- **License**: Released under the open-source **GNU General Public License v3.0 (GPL-3.0)**.
